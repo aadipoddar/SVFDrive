@@ -33,6 +33,9 @@ jobs:
     
     - name: Build SVFDrive.Web
       run: dotnet build SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj --no-restore --configuration Release
+
+    - name: Build EJ2ASPCoreFileProvider
+      run: dotnet build EJ2ASPCoreFileProvider/EJ2ASPCoreFileProvider.csproj --no-restore --configuration Release
     
     - name: Build SVFDrive MAUI (Android)
       run: dotnet build SVFDrive/SVFDrive/SVFDrive.csproj --configuration Release --framework net10.0-android
