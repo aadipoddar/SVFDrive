@@ -19,7 +19,7 @@ public static partial class Secrets
 	public static string ToName => "SVF Drive";
 
 	public static string OnlineFullLogoPath => "https://raw.githubusercontent.com/aadipoddar/SVFDrive/refs/heads/main/SVFDrive/SVFDrive.Web/wwwroot/images/logo.png";
-	public static string AppWebsite => "http://svfdrive.azurewebsites.net";
+	public static string AppWebsite => "https://svfdrive.azurewebsites.net";
 	public static string CompanyWebsite => "https://svf.in/";
 	
 	private static string GetSecret(string key) =>
