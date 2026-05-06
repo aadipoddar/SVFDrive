@@ -4,5 +4,5 @@ public partial class App : Application
 {
 	public App() => InitializeComponent();
 
-	protected override Window CreateWindow(IActivationState? activationState) => new Window(new MainPage()) { Title = "SVFDrive" };
+	protected override Window CreateWindow(IActivationState? activationState) => new(new MainPage()) { Title = "SVFDrive" };
 }

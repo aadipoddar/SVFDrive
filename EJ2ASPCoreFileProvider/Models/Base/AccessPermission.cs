@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace Syncfusion.EJ2.FileManager.Base;
 
-namespace Syncfusion.EJ2.FileManager.Base
-{
     public class AccessPermission
     {
         /// <summary>
@@ -73,4 +69,3 @@ namespace Syncfusion.EJ2.FileManager.Base
         /// </example> 
         public UploadContentFilter UploadContentFilter { get; set; } = UploadContentFilter.All;
     }
-}

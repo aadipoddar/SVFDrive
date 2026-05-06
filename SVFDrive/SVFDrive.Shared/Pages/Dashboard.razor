@@ -68,7 +68,7 @@ else
 			@{
 				var qs = $"?rootFolder={Uri.EscapeDataString(_mainDriveFolder ?? "")}";
 			}
-			<SfFileManager TValue="FileManagerDirectoryContent" Height="100%">
+			<SfFileManager TValue="FileManagerDirectoryContent">
 				<FileManagerAjaxSettings Url="@($"{_fileManagerApiBase}api/FileManager/FileOperations{qs}")"
 										 UploadUrl="@($"{_fileManagerApiBase}api/FileManager/Upload{qs}")"
 										 DownloadUrl="@($"{_fileManagerApiBase}api/FileManager/Download{qs}")"

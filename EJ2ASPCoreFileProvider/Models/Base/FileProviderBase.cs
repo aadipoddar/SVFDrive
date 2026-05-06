@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Net.Http.Headers;
+﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Syncfusion.EJ2.FileManager.Base
-{
+namespace Syncfusion.EJ2.FileManager.Base;
+
     public interface FileProviderBase
     {
 
@@ -38,8 +30,6 @@ namespace Syncfusion.EJ2.FileManager.Base
         FileStreamResult GetImage(string path, string id, bool allowCompress, ImageSize size, params FileManagerDirectoryContent[] data);
       
     }
-
-}
 
 
 

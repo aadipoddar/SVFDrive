@@ -1,7 +1,5 @@
-﻿using System;
+﻿namespace Syncfusion.EJ2.FileManager.Base;
 
-namespace Syncfusion.EJ2.FileManager.Base
-{
     public class FileDetails
     {
         public string Name { get; set; }
@@ -13,4 +11,3 @@ namespace Syncfusion.EJ2.FileManager.Base
         public bool MultipleFiles { get; set; }
         public AccessPermission Permission { get; set; }
     }
-}

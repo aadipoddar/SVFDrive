@@ -9,7 +9,7 @@ BEGIN
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'CodeResendLimit'					, N'3'		, N'Maximum number of code resends allowed')
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'CodeExpiryMinutes'				, N'10'		, N'Expiry time for codes in minutes')
 
-	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'MainDriveFolder'					, N'C:\'	, N'Primary root folder path used by the application')
+	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'MainDriveFolder'					, N'C:\Others'	, N'Primary root folder path used by the application')
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'FileManagerApiBase'				, N'http://localhost:62870/'	, N'Base URL of the EJ2 File Manager API')
 
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'AutoRefreshReportTimer'			, N'5', N'Auto refresh interval for reports in minutes')
