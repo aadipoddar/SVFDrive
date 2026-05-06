@@ -11,4 +11,6 @@ BEGIN
 
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'MainDriveFolder'					, N'C:\'	, N'Primary root folder path used by the application')
 
+	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'AutoRefreshReportTimer'			, N'5', N'Auto refresh interval for reports in minutes')
+
 END

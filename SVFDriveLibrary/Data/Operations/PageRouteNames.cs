@@ -11,6 +11,7 @@ public static class PageRouteNames
 	public const string OperationsDashboard = "/operations";
 
 	public const string User = "/operations/user";
+	public const string AuditTrailReport = "/operations/audit-trail-report";
 	public const string Settings = "/operations/settings";
 	#endregion
 }

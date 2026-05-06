@@ -57,6 +57,7 @@ else
 	<div class="page-shell">
 		<Header Title="Dashboard">
 			<RightContent>
+				<IconButton Icon="IconType.Settings" Title="Operations" Disabled="@(_isLoading || _isUpdating)" OnClick="@(() => NavigationManager.NavigateTo(PageRouteNames.OperationsDashboard))" />
 				<IconButton Icon="IconType.Refresh" Title="Force Update" Disabled="@(_isLoading || _isUpdating)" OnClick="ForceUpdate" />
 			</RightContent>
 		</Header>

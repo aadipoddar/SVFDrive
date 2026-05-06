@@ -83,5 +83,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\LocalSVFDrive.publish.xml" />
+    <None Include="PublishLocations\AzureSVFDrive.publish.xml" />
   </ItemGroup>
 </Project>

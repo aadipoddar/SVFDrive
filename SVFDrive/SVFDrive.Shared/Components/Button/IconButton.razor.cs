@@ -82,7 +82,8 @@ public enum IconType
     Delete,
     Back,
     Add,
-    Get
+    Get,
+	Settings
 }
 
 public enum ButtonVariant

@@ -25,11 +25,14 @@ public partial class SettingsPage
 	// File System Settings
 	private string _mainDriveFolder = @"C:\";
 
-    #endregion
+	// Report Settings
+	private int _autoRefreshReportTimer = 5;
 
-    #region Load Data
+	#endregion
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+	#region Load Data
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
             return;
@@ -71,7 +74,10 @@ public partial class SettingsPage
 
         s = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
         _mainDriveFolder = string.IsNullOrWhiteSpace(s?.Value) ? @"C:\" : s.Value;
-    }
+
+		s = await SettingsData.LoadSettingsByKey(SettingsKeys.AutoRefreshReportTimer);
+		_autoRefreshReportTimer = int.TryParse(s?.Value, out var v6) ? v6 : 5;
+	}
     #endregion
 
     #region Save Settings
@@ -96,7 +102,9 @@ public partial class SettingsPage
             
             await UpdateSetting(SettingsKeys.MainDriveFolder, _mainDriveFolder);
 
-            await _toastNotification.ShowAsync("Saved", "Settings saved successfully.", ToastType.Success);
+			await UpdateSetting(SettingsKeys.AutoRefreshReportTimer, _autoRefreshReportTimer.ToString());
+
+			await _toastNotification.ShowAsync("Saved", "Settings saved successfully.", ToastType.Success);
         }
         catch (Exception ex)
         {
