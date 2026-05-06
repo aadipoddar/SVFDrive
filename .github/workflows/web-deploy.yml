@@ -74,7 +74,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: [version-check, build]
     if: needs.version-check.outputs.should-deploy == 'true'
     
