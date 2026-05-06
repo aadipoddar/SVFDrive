@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="DBSVFDrive/DBSVFDrive.sqlproj" Id="f6eca108-eddd-470e-814b-6ec5625c331e">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="SVFDrive/SVFDrive.Shared/SVFDrive.Shared.csproj" />
+  <Project Path="SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj" />
+  <Project Path="SVFDrive/SVFDrive/SVFDrive.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="SVFDriveLibrary/SVFDriveLibrary.csproj" />
+</Solution>

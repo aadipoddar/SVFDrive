@@ -1,0 +1,25 @@
+<div class="mac-field">
+	@if (Label is not null)
+	{
+		<label class="field-label">
+			@Label
+			@if (Required)
+			{
+				<span class="required">*</span>
+			}
+		</label>
+	}
+
+	<div class="mac-input">
+		<div class="date-year-wrapper">
+			<SfDatePicker @ref="_sfDatePicker" TValue="DateTime" Value="@Value"
+						  Format="dd/MM/yy"
+						  Placeholder="@Placeholder"
+						  FloatLabelType="FloatLabelType.Never"
+						  Enabled="@(!Disabled)"
+						  CssClass="custom-datepicker">
+				<DatePickerEvents TValue="DateTime" ValueChange="@OnValueChangeInternal" Focus="@OnFocus" Blur="@OnBlur" />
+			</SfDatePicker>
+		</div>
+	</div>
+</div>
