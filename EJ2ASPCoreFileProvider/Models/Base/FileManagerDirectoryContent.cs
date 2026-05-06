@@ -58,5 +58,7 @@ namespace Syncfusion.EJ2.FileManager.Base
         public FileManagerDirectoryContent TargetData { get; set; }
 
         public AccessPermission Permission { get; set; }
+
+        public string RootFolder { get; set; }
     }
 }

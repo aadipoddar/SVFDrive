@@ -16,6 +16,7 @@ public static class SettingsKeys
 	public static string CodeExpiryMinutes => "CodeExpiryMinutes";
 	
 	public static string MainDriveFolder => "MainDriveFolder";
+	public static string FileManagerApiBase => "FileManagerApiBase";
 
 	public static string AutoRefreshReportTimer => "AutoRefreshReportTimer";
 }

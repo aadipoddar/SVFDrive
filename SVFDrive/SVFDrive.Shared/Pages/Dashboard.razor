@@ -65,11 +65,14 @@ else
 		<!-- Main Content Container -->
 		<div class="page-container">
 
-			<SfFileManager TValue="FileManagerDirectoryContent">
-				<FileManagerAjaxSettings Url="http://localhost:62870/api/FileManager/FileOperations"
-										 UploadUrl="http://localhost:62870/api/FileManager/Upload"
-										 DownloadUrl="http://localhost:62870/api/FileManager/Download"
-										 GetImageUrl="http://localhost:62870/api/FileManager/GetImage">
+			@{
+				var qs = $"?rootFolder={Uri.EscapeDataString(_mainDriveFolder ?? "")}";
+			}
+			<SfFileManager TValue="FileManagerDirectoryContent" Height="100%">
+				<FileManagerAjaxSettings Url="@($"{_fileManagerApiBase}api/FileManager/FileOperations{qs}")"
+										 UploadUrl="@($"{_fileManagerApiBase}api/FileManager/Upload{qs}")"
+										 DownloadUrl="@($"{_fileManagerApiBase}api/FileManager/Download{qs}")"
+										 GetImageUrl="@($"{_fileManagerApiBase}api/FileManager/GetImage{qs}")">
 				</FileManagerAjaxSettings>
 			</SfFileManager>
 			

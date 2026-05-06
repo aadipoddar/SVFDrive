@@ -2112,7 +2112,12 @@ namespace Syncfusion.EJ2.FileManager.PhysicalFileProvider
         }
         protected virtual string GetFilePath(string path)
         {
-            return Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
+            var dir = Path.GetDirectoryName(path);
+            // When path is a drive root (e.g. "C:\") GetDirectoryName returns null.
+            // Return the path itself so the directory-traversal equality check passes.
+            if (dir == null)
+                return path;
+            return dir + Path.DirectorySeparatorChar;
         }
         protected virtual string[] GetFolderDetails(string path)
         {

@@ -24,6 +24,7 @@ public partial class SettingsPage
 
 	// File System Settings
 	private string _mainDriveFolder = @"C:\";
+	private string _fileManagerApiBase = string.Empty;
 
 	// Report Settings
 	private int _autoRefreshReportTimer = 5;
@@ -75,6 +76,9 @@ public partial class SettingsPage
         s = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
         _mainDriveFolder = string.IsNullOrWhiteSpace(s?.Value) ? @"C:\" : s.Value;
 
+		s = await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase);
+		_fileManagerApiBase = s?.Value ?? string.Empty;
+
 		s = await SettingsData.LoadSettingsByKey(SettingsKeys.AutoRefreshReportTimer);
 		_autoRefreshReportTimer = int.TryParse(s?.Value, out var v6) ? v6 : 5;
 	}
@@ -101,6 +105,7 @@ public partial class SettingsPage
             await UpdateSetting(SettingsKeys.CodeExpiryMinutes, _codeExpiryMinutes.ToString());
             
             await UpdateSetting(SettingsKeys.MainDriveFolder, _mainDriveFolder);
+			await UpdateSetting(SettingsKeys.FileManagerApiBase, _fileManagerApiBase);
 
 			await UpdateSetting(SettingsKeys.AutoRefreshReportTimer, _autoRefreshReportTimer.ToString());
 
