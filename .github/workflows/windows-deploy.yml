@@ -28,16 +28,13 @@ jobs:
     - name: Create Secrets.local_secrets.cs
       run: |
         $secretsContent = @"
-        namespace StradaLibrary.DataAccess;
+        namespace SVFDriveLibrary.DataAccess;
 
         public static partial class Secrets
         {
             static Secrets()
             {
                 AzureConnectionString = "${{ secrets.AzureConnectionString }}";
-
-                AzureBlobStorageConnectionString = "${{ secrets.AzureBlobStorageConnectionString }}";
-                AzureBlobStorageAccountKey = "${{ secrets.AzureBlobStorageAccountKey }}";
 
                 SyncfusionLicense = "${{ secrets.SyncfusionLicense }}";
 
@@ -46,22 +43,22 @@ jobs:
             }
         }
         "@
-        Set-Content -Path "StradaLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
+        Set-Content -Path "SVFDriveLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
     
     - name: Restore dependencies
-      run: dotnet restore Strada/Strada/Strada.csproj
+      run: dotnet restore SVFDrive/SVFDrive/SVFDrive.csproj
     
     - name: Publish Windows MAUI App
-      run: dotnet publish Strada/Strada/Strada.csproj -f net10.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=None -o Strada/Strada/publish/windows
+      run: dotnet publish SVFDrive/SVFDrive/SVFDrive.csproj -f net10.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=None -o SVFDrive/SVFDrive/publish/windows
     
     - name: Create Zip Archive
-      run: Compress-Archive -Path "Strada/Strada/publish/windows/*" -DestinationPath "Strada.zip" -Force
+      run: Compress-Archive -Path "SVFDrive/SVFDrive/publish/windows/*" -DestinationPath "SVFDrive.zip" -Force
     
     - name: Upload Windows Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: windows-release
-        path: Strada.zip
+        path: SVFDrive.zip
 
   deploy:
     runs-on: windows-latest
@@ -81,7 +78,7 @@ jobs:
       with:
         tag_name: ${{ needs.version-check.outputs.current-version }}
         name: ${{ github.event.head_commit.message }}
-        files: Strada.zip
+        files: SVFDrive.zip
         draft: false
         prerelease: false
       env:
@@ -89,4 +86,4 @@ jobs:
     
     - name: Deployment Summary
       run: |
-        echo "🚀 Successfully deployed Strada Windows version ${{ needs.version-check.outputs.current-version }} to GitHub Releases"
+        echo "🚀 Successfully deployed SVFDrive Windows version ${{ needs.version-check.outputs.current-version }} to GitHub Releases"

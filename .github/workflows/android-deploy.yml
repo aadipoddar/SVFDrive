@@ -1,4 +1,4 @@
-name: Deploy for Android
+name: Deploy SVFDrive for Android
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
     - name: Create Secrets.local_secrets.cs
       run: |
         $secretsContent = @"
-        namespace StradaLibrary.DataAccess;
+        namespace SVFDriveLibrary.DataAccess;
 
         public static partial class Secrets
         {
@@ -43,48 +43,48 @@ jobs:
             }
         }
         "@
-        Set-Content -Path "StradaLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
+        Set-Content -Path "SVFDriveLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
     
     - name: Setup Keystore
       run: |
         # Decode base64 keystore and save it
         $keystoreBase64 = "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
         $keystoreBytes = [System.Convert]::FromBase64String($keystoreBase64)
-        $keystorePath = "Strada/Strada/strada.keystore"
+        $keystorePath = "SVFDrive/SVFDrive/svfdrive.keystore"
         [System.IO.File]::WriteAllBytes($keystorePath, $keystoreBytes)
         echo "Keystore created at: $keystorePath"
     
     - name: Restore dependencies
-      run: dotnet restore Strada/Strada/Strada.csproj
+      run: dotnet restore SVFDrive/SVFDrive/SVFDrive.csproj
     
     - name: Build Signed Android APK
       run: |
-        dotnet publish Strada/Strada/Strada.csproj `
+        dotnet publish SVFDrive/SVFDrive/SVFDrive.csproj `
           -f net10.0-android `
           -c Release `
           -p:AndroidPackageFormat=apk `
           -p:AndroidKeyStore=true `
-          -p:AndroidSigningKeyStore=strada.keystore `
-          -p:AndroidSigningKeyAlias=Strada `
+          -p:AndroidSigningKeyStore=svfdrive.keystore `
+          -p:AndroidSigningKeyAlias=SVFDrive `
           -p:AndroidSigningKeyPass="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" `
           -p:AndroidSigningStorePass="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" `
-          -o Strada/Strada/publish/android
+          -o SVFDrive/SVFDrive/publish/android
     
     - name: Find and Rename APK
       id: find-apk
       run: |
-        $apkPath = Get-ChildItem -Path "Strada/Strada/publish/android" -Filter "*.apk" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+        $apkPath = Get-ChildItem -Path "SVFDrive/SVFDrive/publish/android" -Filter "*.apk" -Recurse | Select-Object -First 1 -ExpandProperty FullName
         echo "APK found at: $apkPath"
         
-        # Rename to match UpdateManager expectations: Strada.apk
-        Copy-Item $apkPath -Destination "Strada.apk"
-        echo "APK renamed to: Strada.apk"
+        # Rename to match update artifact naming.
+        Copy-Item $apkPath -Destination "SVFDrive.apk"
+        echo "APK renamed to: SVFDrive.apk"
     
     - name: Upload Android Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: android-release
-        path: Strada.apk
+        path: SVFDrive.apk
 
   deploy:
     runs-on: windows-latest
@@ -103,7 +103,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.version-check.outputs.current-version }}
-        files: Strada.apk
+        files: SVFDrive.apk
         draft: false
         prerelease: false
       env:
@@ -111,4 +111,4 @@ jobs:
     
     - name: Deployment Summary
       run: |
-        echo "🚀 Successfully deployed Strada Android APK to release ${{ needs.version-check.outputs.current-version }}"
+        echo "🚀 Successfully deployed SVFDrive Android APK to release ${{ needs.version-check.outputs.current-version }}"

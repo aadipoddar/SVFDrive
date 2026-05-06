@@ -25,28 +25,25 @@ jobs:
         with:
           dotnet-version: '10.x'
 
-      - name: Restore StradaLibrary
-        run: dotnet restore StradaLibrary/StradaLibrary.csproj
+      - name: Restore SVFDriveLibrary
+        run: dotnet restore SVFDriveLibrary/SVFDriveLibrary.csproj
 
-      - name: Restore Strada.Shared
-        run: dotnet restore Strada/Strada.Shared/Strada.Shared.csproj
+      - name: Restore SVFDrive.Shared
+        run: dotnet restore SVFDrive/SVFDrive.Shared/SVFDrive.Shared.csproj
 
-      - name: Restore Strada.Web
-        run: dotnet restore Strada/Strada.Web/Strada.Web.csproj
+      - name: Restore SVFDrive.Web
+        run: dotnet restore SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj
 
       - name: Create Secrets.local_secrets.cs
         run: |
           $secretsContent = @"
-          namespace StradaLibrary.DataAccess;
+          namespace SVFDriveLibrary.DataAccess;
 
           public static partial class Secrets
           {
               static Secrets()
               {
                   AzureConnectionString = "${{ secrets.AzureConnectionString }}";
-
-                  AzureBlobStorageConnectionString = "${{ secrets.AzureBlobStorageConnectionString }}";
-                  AzureBlobStorageAccountKey = "${{ secrets.AzureBlobStorageAccountKey }}";
 
                   SyncfusionLicense = "${{ secrets.SyncfusionLicense }}";
 
@@ -55,20 +52,20 @@ jobs:
               }
           }
           "@
-          Set-Content -Path "StradaLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
+          Set-Content -Path "SVFDriveLibrary/DataAccess/Secrets.local_secrets.cs" -Value $secretsContent
         shell: pwsh
 
-      - name: Build StradaLibrary
-        run: dotnet build StradaLibrary/StradaLibrary.csproj --configuration Release --no-restore
+      - name: Build SVFDriveLibrary
+        run: dotnet build SVFDriveLibrary/SVFDriveLibrary.csproj --configuration Release --no-restore
 
-      - name: Build Strada.Shared
-        run: dotnet build Strada/Strada.Shared/Strada.Shared.csproj --configuration Release --no-restore
+      - name: Build SVFDrive.Shared
+        run: dotnet build SVFDrive/SVFDrive.Shared/SVFDrive.Shared.csproj --configuration Release --no-restore
 
-      - name: Build Strada.Web
-        run: dotnet build Strada/Strada.Web/Strada.Web.csproj --configuration Release --no-restore
+      - name: Build SVFDrive.Web
+        run: dotnet build SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj --configuration Release --no-restore
 
-      - name: Publish Strada.Web
-        run: dotnet publish Strada/Strada.Web/Strada.Web.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-build
+      - name: Publish SVFDrive.Web
+        run: dotnet publish SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -91,11 +88,11 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'strada'
+          app-name: 'svfdrive'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AA7D8C888E9D42C58BC300240511EDC2 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C2497737DC6643A49C35D6549682F3E4 }}
       
       - name: Deployment Summary
         run: |
-          echo "🚀 Successfully deployed Strada version ${{ needs.version-check.outputs.current-version }} to Azure"
+          echo "🚀 Successfully deployed SVFDrive version ${{ needs.version-check.outputs.current-version }} to Azure"

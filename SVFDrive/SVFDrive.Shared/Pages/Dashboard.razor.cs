@@ -57,7 +57,7 @@ public partial class Dashboard
 			InvokeAsync(StateHasChanged);
 		});
 
-		await UpdateService.UpdateAppAsync("SVF-IT", "SVFDrive", "SVFDrive", progress, forceUpdate);
+		await UpdateService.UpdateAppAsync("aadipoddar", "SVFDrive", "SVFDrive", progress, forceUpdate);
 
 		_isUpdating = false;
 		StateHasChanged();
@@ -92,7 +92,7 @@ public partial class Dashboard
 
 			if (shouldCheckUpdate)
 			{
-				var hasUpdate = await UpdateService.CheckForUpdatesAsync("SVF-IT", "SVFDrive", "SVFDrive", AppVersion);
+				var hasUpdate = await UpdateService.CheckForUpdatesAsync("aadipoddar", "SVFDrive", "SVFDrive", AppVersion);
 				if (hasUpdate)
 					await StartUpdateProcess();
 			}

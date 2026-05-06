@@ -56,7 +56,7 @@ jobs:
       - name: Verify Azure Connection String
         id: connection-check
         run: |
-          $CONNECTION_LINE = Get-Content StradaLibrary/DataAccess/SqlDataAccess.cs | Select-String "_databaseConnection = Secrets"
+          $CONNECTION_LINE = Get-Content SVFDriveLibrary/DataAccess/SqlDataAccess.cs | Select-String "_databaseConnection = Secrets"
           
           if ($CONNECTION_LINE -match "Secrets.AzureConnectionString") {
             echo "connection-valid=true" >> $env:GITHUB_OUTPUT
@@ -73,7 +73,7 @@ jobs:
         id: assembly-check
         run: |
           $README_VERSION = "${{ steps.extract-version.outputs.version }}"
-          $ASSEMBLY_VERSION = (Get-Content Strada/Strada.Shared/Strada.Shared.csproj | Select-String -Pattern '<AssemblyVersion>([^<]+)</AssemblyVersion>').Matches.Groups[1].Value
+          $ASSEMBLY_VERSION = (Get-Content SVFDrive/SVFDrive.Shared/SVFDrive.Shared.csproj | Select-String -Pattern '<AssemblyVersion>([^<]+)</AssemblyVersion>').Matches.Groups[1].Value
           
           if ($README_VERSION -eq $ASSEMBLY_VERSION) {
             echo "assembly-valid=true" >> $env:GITHUB_OUTPUT
@@ -87,12 +87,12 @@ jobs:
         id: android-check
         run: |
           $README_VERSION = "${{ steps.extract-version.outputs.version }}"
-          $ANDROID_VERSION = (Get-Content Strada/Strada/Platforms/Android/AndroidManifest.xml | Select-String -Pattern 'android:versionName="([^"]+)"').Matches.Groups[1].Value
-          $ANDROID_CODE = (Get-Content Strada/Strada/Platforms/Android/AndroidManifest.xml | Select-String -Pattern 'android:versionCode="([^"]+)"').Matches.Groups[1].Value
+          $ANDROID_VERSION = (Get-Content SVFDrive/SVFDrive/Platforms/Android/AndroidManifest.xml | Select-String -Pattern 'android:versionName="([^"]+)"').Matches.Groups[1].Value
+          $ANDROID_CODE = (Get-Content SVFDrive/SVFDrive/Platforms/Android/AndroidManifest.xml | Select-String -Pattern 'android:versionCode="([^"]+)"').Matches.Groups[1].Value
           
           # Get previous versionCode
           git checkout HEAD~1 2>$null
-          $PREV_ANDROID_CODE = (Get-Content Strada/Strada/Platforms/Android/AndroidManifest.xml -ErrorAction SilentlyContinue | Select-String -Pattern 'android:versionCode="([^"]+)"').Matches.Groups[1].Value
+          $PREV_ANDROID_CODE = (Get-Content SVFDrive/SVFDrive/Platforms/Android/AndroidManifest.xml -ErrorAction SilentlyContinue | Select-String -Pattern 'android:versionCode="([^"]+)"').Matches.Groups[1].Value
           if (-not $PREV_ANDROID_CODE) { $PREV_ANDROID_CODE = "0" }
           git checkout -
           

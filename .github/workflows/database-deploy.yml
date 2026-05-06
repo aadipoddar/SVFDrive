@@ -21,11 +21,11 @@ jobs:
       uses: microsoft/setup-msbuild@v2
     
     - name: Build SQL Server Database Project
-      run: msbuild DBStrada/DBStrada.sqlproj /p:Configuration=Release /p:Platform="Any CPU"
+      run: msbuild DBSVFDrive/DBSVFDrive.sqlproj /p:Configuration=Release /p:Platform="Any CPU"
     
     - name: Find DACPAC file
       run: |
-        Get-ChildItem -Path "DBStrada" -Filter "*.dacpac" -Recurse | Select-Object FullName
+        Get-ChildItem -Path "DBSVFDrive" -Filter "*.dacpac" -Recurse | Select-Object FullName
     
     - name: Install SqlPackage
       run: |
@@ -34,7 +34,7 @@ jobs:
     
     - name: Deploy Database to Azure SQL
       run: |
-        $dacpacPath = (Get-ChildItem -Path "DBStrada" -Filter "DBStrada.dacpac" -Recurse).FullName
+        $dacpacPath = (Get-ChildItem -Path "DBSVFDrive" -Filter "DBSVFDrive.dacpac" -Recurse).FullName
         echo "Using DACPAC: $dacpacPath"
         ./SqlPackage/SqlPackage.exe /Action:Publish `
           /SourceFile:"$dacpacPath" `
@@ -43,4 +43,4 @@ jobs:
     
     - name: Deployment Summary
       run: |
-        echo "🚀 Successfully deployed Strada database version ${{ needs.version-check.outputs.current-version }} to Azure SQL"
+        echo "🚀 Successfully deployed SVFDrive database version ${{ needs.version-check.outputs.current-version }} to Azure SQL"
