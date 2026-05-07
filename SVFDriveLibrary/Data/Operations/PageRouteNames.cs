@@ -14,4 +14,8 @@ public static class PageRouteNames
 	public const string AuditTrailReport = "/operations/audit-trail-report";
 	public const string Settings = "/operations/settings";
 	#endregion
+
+	#region Permissions
+	public const string UserFolderPermission = "/operations/user-folder-permission";
+	#endregion
 }

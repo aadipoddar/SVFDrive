@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.FileManager.Base;
 using System.Text.Json;
 using SVFDriveLibrary.Data.Operations;
+using SVFDriveLibrary.Data.Permissions;
 using SVFDriveLibrary.Models.Operations;
 
 namespace EJ2APIServices.Controllers;
@@ -15,16 +16,41 @@ public class FileManagerController : Controller
 {
 	private readonly PhysicalFileProvider _operation = new();
 
-	private async Task SetRoot()
+	private const string Role = "User";
+
+	// Sets up the user's root folder and write rules. Returns false if the user has no read access.
+	private async Task<bool> SetupForUser(int userId)
 	{
+		var permissions = await UserFolderPermissionData.LoadUserFolderPermissionByUserId(userId);
+		var perm = permissions.FirstOrDefault();
+
+		if (perm == null || !perm.Read)
+			return false;
+
 		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
-		_operation.RootFolder(setting.Value);
+		var subPath = perm.FolderPath.TrimEnd('/').Replace('/', Path.DirectorySeparatorChar);
+		_operation.RootFolder(setting.Value + subPath);
+
+		if (!perm.Write)
+		{
+			var rules = new List<AccessRule>
+			{
+				new() { Path = "*", Role = Role, Write = Permission.Deny, WriteContents = Permission.Deny, Upload = Permission.Deny }
+			};
+			_operation.SetRules(new AccessDetails { Role = Role, AccessRules = rules });
+		}
+
+		return true;
 	}
 
 	[Route("FileOperations")]
 	public async Task<object> FileOperations([FromBody] FileManagerDirectoryContent args, [FromQuery] int userId)
 	{
-		await SetRoot();
+		if (!await SetupForUser(userId))
+			return _operation.ToCamelCase(new FileManagerResponse
+			{
+				Error = new ErrorDetails { Code = "401", Message = "No access." }
+			});
 
 		if ((args.Action == "delete" || args.Action == "rename") && args.TargetPath == null && args.Path == "")
 			return _operation.ToCamelCase(new FileManagerResponse
@@ -50,7 +76,9 @@ public class FileManagerController : Controller
 	[DisableRequestSizeLimit]
 	public async Task<IActionResult> Upload(string path, long size, IList<IFormFile> uploadFiles, string action, [FromQuery] int userId)
 	{
-		await SetRoot();
+		if (!await SetupForUser(userId))
+			return Forbid();
+
 		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
 		var basePath = setting.Value;
 
@@ -95,7 +123,9 @@ public class FileManagerController : Controller
 	[Route("Download")]
 	public async Task<IActionResult> Download(string downloadInput, [FromQuery] int userId)
 	{
-		await SetRoot();
+		if (!await SetupForUser(userId))
+			return Forbid();
+
 		var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 		var args = JsonSerializer.Deserialize<FileManagerDirectoryContent>(downloadInput, options);
 		return _operation.Download(args.Path, args.Names, args.Data);
@@ -117,7 +147,9 @@ public class FileManagerController : Controller
 			}
 		}
 
-		await SetRoot();
+		if (!int.TryParse(userId, out var uid) || !await SetupForUser(uid))
+			return Forbid();
+
 		return _operation.GetImage(path, null, false, null, null);
 	}
 }
