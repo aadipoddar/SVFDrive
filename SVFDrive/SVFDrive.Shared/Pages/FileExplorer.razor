@@ -1,0 +1,17 @@
+@using Syncfusion.Blazor.FileManager
+
+@if (!_isLoading)
+{
+	<div>
+		@{
+			var qs = $"?rootFolder={Uri.EscapeDataString(_mainDriveFolder ?? "")}";
+		}
+		<SfFileManager TValue="FileManagerDirectoryContent">
+			<FileManagerAjaxSettings Url="@($"{_fileManagerApiBase}api/FileManager/FileOperations{qs}")"
+									 UploadUrl="@($"{_fileManagerApiBase}api/FileManager/Upload{qs}")"
+									 DownloadUrl="@($"{_fileManagerApiBase}api/FileManager/Download{qs}")"
+									 GetImageUrl="@($"{_fileManagerApiBase}api/FileManager/GetImage{qs}")">
+			</FileManagerAjaxSettings>
+		</SfFileManager>
+	</div>
+}

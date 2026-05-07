@@ -1,7 +1,5 @@
 ﻿@attribute [Route(PageRouteNames.Dashboard)]
 
-@using Syncfusion.Blazor.FileManager
-
 <PageTitle>Dashboard - SVF Drive</PageTitle>
 
 @if (!_isUpdating && (_isLoading || _user is null))
@@ -65,16 +63,7 @@ else
 		<!-- Main Content Container -->
 		<div class="page-container">
 
-			@{
-				var qs = $"?rootFolder={Uri.EscapeDataString(_mainDriveFolder ?? "")}";
-			}
-			<SfFileManager TValue="FileManagerDirectoryContent">
-				<FileManagerAjaxSettings Url="@($"{_fileManagerApiBase}api/FileManager/FileOperations{qs}")"
-										 UploadUrl="@($"{_fileManagerApiBase}api/FileManager/Upload{qs}")"
-										 DownloadUrl="@($"{_fileManagerApiBase}api/FileManager/Download{qs}")"
-										 GetImageUrl="@($"{_fileManagerApiBase}api/FileManager/GetImage{qs}")">
-				</FileManagerAjaxSettings>
-			</SfFileManager>
+			<FileExplorer />
 			
 		</div>
 

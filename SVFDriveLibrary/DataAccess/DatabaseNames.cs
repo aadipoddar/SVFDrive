@@ -31,3 +31,16 @@ public static class OperationNames
 	public static string InsertAuditTrail => "Insert_AuditTrail";
 	#endregion
 }
+
+public static class PermissionsNames
+{
+	#region Permissions
+	public static string InsertUserFolderPermission => "Insert_UserFolderPermission";
+
+	public static string DeleteUserFolderPermissionById => "Delete_UserFolderPermission_By_Id";
+
+	public static string LoadUserFolderPermissionByUserId => "Load_UserFolderPermission_By_UserId";
+
+	public static string UserFolderPermission => "UserFolderPermission";
+	#endregion
+}
