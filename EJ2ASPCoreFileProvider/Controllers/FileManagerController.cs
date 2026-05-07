@@ -22,7 +22,7 @@ public class FileManagerController : Controller
 	}
 
 	[Route("FileOperations")]
-	public async Task<object> FileOperations([FromBody] FileManagerDirectoryContent args)
+	public async Task<object> FileOperations([FromBody] FileManagerDirectoryContent args, [FromQuery] int userId)
 	{
 		await SetRoot();
 
@@ -48,11 +48,12 @@ public class FileManagerController : Controller
 
 	[Route("Upload")]
 	[DisableRequestSizeLimit]
-	public async Task<IActionResult> Upload(string path, long size, IList<IFormFile> uploadFiles, string action)
+	public async Task<IActionResult> Upload(string path, long size, IList<IFormFile> uploadFiles, string action, [FromQuery] int userId)
 	{
 		await SetRoot();
 		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
 		var basePath = setting.Value;
+
 		try
 		{
 			foreach (var file in uploadFiles)
@@ -92,7 +93,7 @@ public class FileManagerController : Controller
 	}
 
 	[Route("Download")]
-	public async Task<IActionResult> Download(string downloadInput)
+	public async Task<IActionResult> Download(string downloadInput, [FromQuery] int userId)
 	{
 		await SetRoot();
 		var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -101,8 +102,21 @@ public class FileManagerController : Controller
 	}
 
 	[Route("GetImage")]
-	public async Task<IActionResult> GetImage([FromQuery] string path)
+	public async Task<IActionResult> GetImage([FromQuery] string path, [FromQuery] string userId)
 	{
+		// Syncfusion appends "?path=..." even when the URL already has a query string,
+		// producing "?userId=5?path=foo" — ASP.NET then sees userId="5?path=foo" and no path.
+		if (string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(userId))
+		{
+			var idx = userId.IndexOf("?path=", StringComparison.OrdinalIgnoreCase);
+			if (idx < 0) idx = userId.IndexOf("&path=", StringComparison.OrdinalIgnoreCase);
+			if (idx >= 0)
+			{
+				path = Uri.UnescapeDataString(userId[(idx + 6)..]);
+				userId = userId[..idx];
+			}
+		}
+
 		await SetRoot();
 		return _operation.GetImage(path, null, false, null, null);
 	}
