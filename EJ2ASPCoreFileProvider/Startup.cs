@@ -1,48 +1,52 @@
-﻿namespace EJ2FileManagerService;
+﻿using SVFDriveLibrary.DataAccess;
 
-    public class Startup
-    {
-        public IWebHostEnvironment Environment { get; }
-        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
-        {
-            Configuration = configuration;
-            Environment = environment;
-        }
+namespace EJ2FileManagerService;
 
-        public IConfiguration Configuration { get; }
+public class Startup
+{
+	public IWebHostEnvironment Environment { get; }
+	public Startup(IConfiguration configuration, IWebHostEnvironment environment)
+	{
+		Configuration = configuration;
+		Environment = environment;
+		SqlDataAccess.SetupConfiguration();
+	}
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddMvc();
-            services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-                });
-            });
-        }
+	public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app)
-        {
-            if (Environment.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
-            app.UseRouting();
-            app.UseCors("AllowAllOrigins");
-            app.UseHttpsRedirection();
-            app.UseEndpoints(endpoints => {
-                endpoints.MapControllerRoute(name: "default", pattern: "{controller=Test}/{action=Index}/{id?}");
-            });
+	// This method gets called by the runtime. Use this method to add services to the container.
+	public void ConfigureServices(IServiceCollection services)
+	{
+		services.AddMvc();
+		services.AddCors(options =>
+		{
+			options.AddPolicy("AllowAllOrigins", builder =>
+			{
+				builder.AllowAnyOrigin()
+				.AllowAnyMethod()
+				.AllowAnyHeader();
+			});
+		});
+	}
 
-        }
-    }
+	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+	public void Configure(IApplicationBuilder app)
+	{
+		if (Environment.IsDevelopment())
+		{
+			app.UseDeveloperExceptionPage();
+		}
+		else
+		{
+			app.UseHsts();
+		}
+		app.UseRouting();
+		app.UseCors("AllowAllOrigins");
+		app.UseHttpsRedirection();
+		app.UseEndpoints(endpoints =>
+		{
+			endpoints.MapControllerRoute(name: "default", pattern: "{controller=Test}/{action=Index}/{id?}");
+		});
+
+	}
+}

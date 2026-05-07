@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.FileManager.Base;
 using System.Text.Json;
+using SVFDriveLibrary.Data.Operations;
+using SVFDriveLibrary.Models.Operations;
 
 namespace EJ2APIServices.Controllers;
 
@@ -13,13 +15,16 @@ public class FileManagerController : Controller
 {
 	private readonly PhysicalFileProvider _operation = new();
 
-	private void SetRoot(string root) =>
-		_operation.RootFolder(root);
+	private async Task SetRoot()
+	{
+		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
+		_operation.RootFolder(setting.Value);
+	}
 
 	[Route("FileOperations")]
-	public object FileOperations([FromBody] FileManagerDirectoryContent args, [FromQuery] string rootFolder)
+	public async Task<object> FileOperations([FromBody] FileManagerDirectoryContent args)
 	{
-		SetRoot(rootFolder);
+		await SetRoot();
 
 		if ((args.Action == "delete" || args.Action == "rename") && args.TargetPath == null && args.Path == "")
 			return _operation.ToCamelCase(new FileManagerResponse
@@ -43,9 +48,11 @@ public class FileManagerController : Controller
 
 	[Route("Upload")]
 	[DisableRequestSizeLimit]
-	public IActionResult Upload(string path, long size, IList<IFormFile> uploadFiles, string action, [FromQuery] string rootFolder)
+	public async Task<IActionResult> Upload(string path, long size, IList<IFormFile> uploadFiles, string action)
 	{
-		SetRoot(rootFolder);
+		await SetRoot();
+		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
+		var basePath = setting.Value;
 		try
 		{
 			foreach (var file in uploadFiles)
@@ -55,7 +62,7 @@ public class FileManagerController : Controller
 				{
 					for (var i = 0; i < folders.Length - 1; i++)
 					{
-						string newDirectoryPath = Path.Combine(rootFolder + path, folders[i]);
+						string newDirectoryPath = Path.Combine(basePath + path, folders[i]);
 						if (Path.GetFullPath(newDirectoryPath) != Path.GetDirectoryName(newDirectoryPath) + Path.DirectorySeparatorChar + folders[i])
 							throw new UnauthorizedAccessException("Access denied for Directory-traversal");
 						if (!Directory.Exists(newDirectoryPath))
@@ -85,31 +92,18 @@ public class FileManagerController : Controller
 	}
 
 	[Route("Download")]
-	public IActionResult Download(string downloadInput, [FromQuery] string rootFolder)
+	public async Task<IActionResult> Download(string downloadInput)
 	{
-		SetRoot(rootFolder);
+		await SetRoot();
 		var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 		var args = JsonSerializer.Deserialize<FileManagerDirectoryContent>(downloadInput, options);
 		return _operation.Download(args.Path, args.Names, args.Data);
 	}
 
 	[Route("GetImage")]
-	public IActionResult GetImage([FromQuery] string path, [FromQuery] string rootFolder)
+	public async Task<IActionResult> GetImage([FromQuery] string path)
 	{
-		// Syncfusion Blazor sometimes appends "?path=..." to a URL that already has "?rootFolder=...",
-		// producing "?rootFolder=X?path=Y" — ASP.NET then sees rootFolder = "X?path=Y" and no path.
-		if (string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(rootFolder))
-		{
-			var idx = rootFolder.IndexOf("?path=", StringComparison.OrdinalIgnoreCase);
-			if (idx < 0) idx = rootFolder.IndexOf("&path=", StringComparison.OrdinalIgnoreCase);
-			if (idx >= 0)
-			{
-				path = Uri.UnescapeDataString(rootFolder[(idx + 6)..]);
-				rootFolder = rootFolder[..idx];
-			}
-		}
-
-		SetRoot(rootFolder);
+		await SetRoot();
 		return _operation.GetImage(path, null, false, null, null);
 	}
 }
