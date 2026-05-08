@@ -1,11 +1,13 @@
 ﻿namespace SVFDriveLibrary.Models.FileExplorer;
 
-public class FolderFileModel
+public class FileFolderModel
 {
 	public bool IsFile { get; set; }
 	public string Name { get; set; }
 	public string FullName { get; set; }
 	public string Extension { get; set; }
+
+	public string ParentFullName { get; set; }
 
 	public long Length { get; set; }
 	public bool IsReadOnly { get; set; }

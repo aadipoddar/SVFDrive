@@ -3,9 +3,19 @@
 @if (!_isLoading)
 {
 	<div>
+
+		@if (_currentPath.FullName != _mainDriveFolder.FullName)
+		{
+			<SfButton Content="Back" OnClick='async () => await LoadParentFolderFiles()' />
+			<SfButton Content="Home" OnClick='async () => await LoadFolderFiles(_mainDriveFolder.FullName)' />
+			<SfButton Content="Refresh" OnClick='async () => await LoadFolderFiles()' />
+		}
+
 		@foreach (var item in _folderFiles)
 		{
-			@(item.Name)
+			<div>
+				<SfButton Content="@item.Name" @ondblclick="async () => { if (!item.IsFile) await LoadFolderFiles(item.FullName); }" />
+			</div>
 		}
 	</div>
 }

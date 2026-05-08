@@ -1,4 +1,7 @@
 using Scalar.AspNetCore;
+using SVFDriveLibrary.DataAccess;
+
+SqlDataAccess.SetupConfiguration();
 
 var builder = WebApplication.CreateBuilder(args);
 
