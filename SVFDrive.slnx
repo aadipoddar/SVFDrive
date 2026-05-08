@@ -4,6 +4,7 @@
     <Deploy />
   </Project>
   <Project Path="EJ2ASPCoreFileProvider/EJ2ASPCoreFileProvider.csproj" Id="ef6397c5-f67b-44f4-91cc-0779d5283f31" />
+  <Project Path="FIleExplorerAPI/FIleExplorerAPI.csproj" Id="0b01e326-ee56-4b09-bd4a-e4e6037b96d8" />
   <Project Path="SVFDrive/SVFDrive.Shared/SVFDrive.Shared.csproj" />
   <Project Path="SVFDrive/SVFDrive.Web/SVFDrive.Web.csproj" />
   <Project Path="SVFDrive/SVFDrive/SVFDrive.csproj">

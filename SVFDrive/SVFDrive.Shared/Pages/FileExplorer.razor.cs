@@ -19,6 +19,9 @@ public partial class FileExplorer
 		var fileManagerApiBase = await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase);
 		_fileManagerApiBase = fileManagerApiBase.Value;
 
+		// TODO - NEW API
+		_fileManagerApiBase = "https://localhost:7250/";
+
 		_isLoading = false;
 		StateHasChanged();
 	}
