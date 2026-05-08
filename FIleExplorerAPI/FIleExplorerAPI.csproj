@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="FIleExplorerAPI.csproj.lscache" />
+    <None Remove="FileExplorerAPI.csproj.lscache" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SVFDriveLibrary\SVFDriveLibrary.csproj" />
   </ItemGroup>
 
 </Project>
