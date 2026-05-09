@@ -19,32 +19,44 @@ public class FileFolderManagerController : ControllerBase
 	[Route("GetParentFileFolders")]
 	public async Task<object> GetParentFileFolders([FromQuery] string path)
 	{
-		var dir = new DirectoryInfo(path);
-		var parentDir = dir.Parent;
+		try
+		{
+			var dir = new DirectoryInfo(path);
+			var parentDir = dir.Parent ?? dir;
 
-		path = await FileFolderData.ValidateRootPath(parentDir.FullName);
-		return FileFolderData.LoadFileFoldersFromPath(path);
+			path = await FileFolderData.ValidateRootPath(parentDir.FullName);
+			return FileFolderData.LoadFileFoldersFromPath(path);
+		}
+		catch { return null; }
 	}
 
 	[HttpGet]
 	[Route("GetFileInfo")]
 	public async Task<object> GetFileInfo([FromQuery] string path)
 	{
-		path = await FileFolderData.ValidateRootPath(path);
-		
-		var fileInfo = new FileInfo(path);
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
 
-		return FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: fileInfo);
+			var fileInfo = new FileInfo(path);
+
+			return FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: fileInfo);
+		}
+		catch { return null; }
 	}
 
 	[HttpGet]
 	[Route("GetFolderInfo")]
 	public async Task<object> GetFolderInfo([FromQuery] string path)
 	{
-		path = await FileFolderData.ValidateRootPath(path);
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
 
-		var dir = new DirectoryInfo(path);
+			var dir = new DirectoryInfo(path);
 
-		return FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: dir);
+			return FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: dir);
+		}
+		catch { return null; }
 	}
 }

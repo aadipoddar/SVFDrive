@@ -25,7 +25,11 @@ public partial class FileExplorer
 		new ItemModel() { Id = "GoBack", TooltipText = "Go back", PrefixIcon = "e-arrow-left" },
 		new ItemModel() { Id = "Home", TooltipText = "Home", PrefixIcon = "e-home" },
 		new ItemModel() { Id = "Refresh", TooltipText = "Refresh", PrefixIcon = "e-refresh" },
+		new ItemModel() { Type = ItemType.Separator},
 		new ItemModel() { Id = "Path" },
+		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
+		new ItemModel() { Id = "Delete", TooltipText = "Delete", PrefixIcon = "e-delete", Align = ItemAlign.Right},
+		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
 		"Search"
 	];
 
@@ -149,7 +153,7 @@ public partial class FileExplorer
 
 	private async Task DataGridRefresh()
 	{
-		ToolbarItems[3] = new ItemModel() { Id = "Path", Text = _currentPath?.FullName ?? string.Empty };
+		ToolbarItems[4] = new ItemModel() { Id = "Path", Text = _currentPath?.FullName ?? string.Empty };
 
 		if (_sfGrid is not null)
 			await _sfGrid.Refresh();
