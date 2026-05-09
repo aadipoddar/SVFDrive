@@ -74,7 +74,7 @@ public class VirtualizationController : Controller
 			FileManagerResponse uploadResponse;
 			foreach (var file in uploadFiles)
 			{
-				var folders = (file.FileName).Split('/');
+				var folders = file.FileName.Split('/');
 				// checking the folder upload
 				if (folders.Length > 1)
 				{

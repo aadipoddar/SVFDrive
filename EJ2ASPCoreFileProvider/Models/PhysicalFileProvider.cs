@@ -39,7 +39,7 @@ public class PhysicalFileProvider
 		hostName = new Uri(contentRootPath).Host;
 		if (!string.IsNullOrEmpty(hostName))
 		{
-			hostPath = Path.DirectorySeparatorChar + hostName + Path.DirectorySeparatorChar + contentRootPath.Substring((contentRootPath.ToLower().IndexOf(hostName) + hostName.Length + 1));
+			hostPath = Path.DirectorySeparatorChar + hostName + Path.DirectorySeparatorChar + contentRootPath.Substring(contentRootPath.ToLower().IndexOf(hostName) + hostName.Length + 1);
 		}
 	}
 
@@ -314,11 +314,11 @@ public class PhysicalFileProvider
 				string fullPath = "";
 				if (names.Length == 0)
 				{
-					fullPath = (contentRootPath + path.Substring(0, path.Length - 1));
+					fullPath = contentRootPath + path.Substring(0, path.Length - 1);
 				}
 				else if (string.IsNullOrEmpty(names[0]))
 				{
-					fullPath = (contentRootPath + path);
+					fullPath = contentRootPath + path;
 				}
 				else
 				{
@@ -361,7 +361,7 @@ public class PhysicalFileProvider
 					string fullPath = "";
 					if (names[i] == null)
 					{
-						fullPath = (contentRootPath + path);
+						fullPath = contentRootPath + path;
 					}
 					else
 					{
@@ -433,7 +433,7 @@ public class PhysicalFileProvider
 			FileManagerDirectoryContent removingFile;
 			for (int i = 0; i < names.Length; i++)
 			{
-				string fullPath = SanitizePath(Path.Combine((contentRootPath + path), names[i]));
+				string fullPath = SanitizePath(Path.Combine(contentRootPath + path, names[i]));
 				if (Path.GetFullPath(fullPath) != GetFilePath(fullPath) + Path.GetFileName(fullPath))
 				{
 					throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -719,7 +719,7 @@ public class PhysicalFileProvider
 						{
 							throw new UnauthorizedAccessException("Access denied for Directory-traversal");
 						}
-						bool fileExist = System.IO.File.Exists(newPath);
+						bool fileExist = File.Exists(newPath);
 						try
 						{
 
@@ -1102,9 +1102,9 @@ public class PhysicalFileProvider
 			if (showHiddenItems)
 			{
 				IEnumerable<FileInfo> filteredFileList = GetDirectoryFiles(searchDirectory, files).
-					Where(item => new Regex(WildcardToRegex(searchString), (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase)).IsMatch(item.Name));
+					Where(item => new Regex(WildcardToRegex(searchString), caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase).IsMatch(item.Name));
 				IEnumerable<DirectoryInfo> filteredDirectoryList = GetDirectoryFolders(searchDirectory, directories).
-					Where(item => new Regex(WildcardToRegex(searchString), (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase)).IsMatch(item.Name));
+					Where(item => new Regex(WildcardToRegex(searchString), caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase).IsMatch(item.Name));
 				foreach (FileInfo file in filteredFileList)
 				{
 					FileManagerDirectoryContent fileDetails = GetFileDetails(SanitizePath(Path.Combine(contentRootPath, file.DirectoryName, file.Name)));
@@ -1127,9 +1127,9 @@ public class PhysicalFileProvider
 			else
 			{
 				IEnumerable<FileInfo> filteredFileList = GetDirectoryFiles(searchDirectory, files).
-				   Where(item => new Regex(WildcardToRegex(searchString), (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase)).IsMatch(item.Name) && (item.Attributes & FileAttributes.Hidden) == 0);
+				   Where(item => new Regex(WildcardToRegex(searchString), caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase).IsMatch(item.Name) && (item.Attributes & FileAttributes.Hidden) == 0);
 				IEnumerable<DirectoryInfo> filteredDirectoryList = GetDirectoryFolders(searchDirectory, directories).
-					Where(item => new Regex(WildcardToRegex(searchString), (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase)).IsMatch(item.Name) && (item.Attributes & FileAttributes.Hidden) == 0);
+					Where(item => new Regex(WildcardToRegex(searchString), caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase).IsMatch(item.Name) && (item.Attributes & FileAttributes.Hidden) == 0);
 				foreach (FileInfo file in filteredFileList)
 				{
 					FileManagerDirectoryContent fileDetails = GetFileDetails(SanitizePath(Path.Combine(contentRootPath, file.DirectoryName, file.Name)));
@@ -1329,7 +1329,7 @@ public class PhysicalFileProvider
 					var name = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim().ToString();
 					string[] folders = name.Split('/');
 					string fileName = folders[folders.Length - 1];
-					var fullName = SanitizePath(Path.Combine((contentRootPath + path), fileName));
+					var fullName = SanitizePath(Path.Combine(contentRootPath + path, fileName));
 					if (Path.GetFullPath(fullName) != GetFilePath(fullName) + Path.GetFileName(fullName))
 					{
 						throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -1340,7 +1340,7 @@ public class PhysicalFileProvider
 					{
 #if !EJ2_DNX
 						bool isValidChunkUpload = file.ContentType == "application/octet-stream" && (fileLength != size);
-						if (!System.IO.File.Exists(fullName) || isValidChunkUpload)
+						if (!File.Exists(fullName) || isValidChunkUpload)
 						{
 							PerformUpload(file, fileLength, size, fullName);
 #else
@@ -1356,9 +1356,9 @@ public class PhysicalFileProvider
 					}
 					else if (action == "remove")
 					{
-						if (System.IO.File.Exists(fullName))
+						if (File.Exists(fullName))
 						{
-							System.IO.File.Delete(fullName);
+							File.Delete(fullName);
 						}
 						else
 						{
@@ -1374,9 +1374,9 @@ public class PhysicalFileProvider
 					{
 #if !EJ2_DNX
 						long duplicateFileSize = new FileInfo(fullName).Length;
-						if (System.IO.File.Exists(fullName) && (duplicateFileSize == size || file.ContentType != "application/octet-stream"))
+						if (File.Exists(fullName) && (duplicateFileSize == size || file.ContentType != "application/octet-stream"))
 						{
-							System.IO.File.Delete(fullName);
+							File.Delete(fullName);
 						}
 						PerformUpload(file, fileLength, size, fullName);
 #else
@@ -1394,7 +1394,7 @@ public class PhysicalFileProvider
 						if (index >= 0)
 							newName = newName.Substring(0, index);
 						int fileCount = 0;
-						while (System.IO.File.Exists(newName + (fileCount > 0 ? "(" + fileCount.ToString() + ")" + Path.GetExtension(name) : Path.GetExtension(name))))
+						while (File.Exists(newName + (fileCount > 0 ? "(" + fileCount.ToString() + ")" + Path.GetExtension(name) : Path.GetExtension(name))))
 						{
 #if !EJ2_DNX
 							long duplicateSize = new FileInfo(newName + (fileCount > 0 ? "(" + fileCount.ToString() + ")" + Path.GetExtension(name) : Path.GetExtension(name))).Length;
@@ -1459,7 +1459,7 @@ public class PhysicalFileProvider
 		}
 		else
 		{
-			using (FileStream fs = System.IO.File.Create(name))
+			using (FileStream fs = File.Create(name))
 			{
 				file.CopyTo(fs);
 				fs.Flush();
@@ -1655,7 +1655,7 @@ public class PhysicalFileProvider
 				{
 					throw new UnauthorizedAccessException("Access denied for Directory-traversal");
 				}
-				byte[] bytes = System.IO.File.ReadAllBytes(fullPath);
+				byte[] bytes = File.ReadAllBytes(fullPath);
 				FileStream fileStreamInput = new(fullPath, FileMode.Open, FileAccess.Read);
 				fileStreamResult = new FileStreamResult(fileStreamInput, "APPLICATION/octet-stream");
 			}
@@ -1677,16 +1677,16 @@ public class PhysicalFileProvider
 				string fileName = Guid.NewGuid().ToString() + "temp.zip";
 				string newFileName = fileName.Substring(36);
 				tempPath = Path.Combine(Path.GetTempPath(), newFileName);
-				if (System.IO.File.Exists(tempPath))
+				if (File.Exists(tempPath))
 				{
-					System.IO.File.Delete(tempPath);
+					File.Delete(tempPath);
 				}
 				string currentDirectory;
 				ZipArchiveEntry zipEntry;
 				ZipArchive archive;
 				for (int i = 0; i < names.Count(); i++)
 				{
-					fullPath = SanitizePath(Path.Combine((contentRootPath + path), names[i]));
+					fullPath = SanitizePath(Path.Combine(contentRootPath + path, names[i]));
 					if (Path.GetFullPath(fullPath) != GetFilePath(fullPath) + Path.GetFileName(fullPath))
 					{
 						throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -1697,7 +1697,7 @@ public class PhysicalFileProvider
 						{
 							using (archive = ZipFile.Open(tempPath, ZipArchiveMode.Update))
 							{
-								currentDirectory = SanitizePath(Path.Combine((contentRootPath + path), names[i]));
+								currentDirectory = SanitizePath(Path.Combine(contentRootPath + path, names[i]));
 								if (Path.GetFullPath(currentDirectory) != GetFilePath(currentDirectory) + Path.GetFileName(currentDirectory))
 								{
 									throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -1789,7 +1789,7 @@ public class PhysicalFileProvider
 				{
 					for (int i = 0; i < names.Length; i++)
 					{
-						currentDirectory = SanitizePath(Path.Combine((contentRootPath + path), names[i]));
+						currentDirectory = SanitizePath(Path.Combine(contentRootPath + path, names[i]));
 						if (Path.GetFullPath(currentDirectory) != GetFilePath(currentDirectory) + Path.GetFileName(currentDirectory))
 						{
 							throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -1858,7 +1858,7 @@ public class PhysicalFileProvider
 	private string DirectoryRename(string newPath)
 	{
 		int directoryCount = 0;
-		while (System.IO.Directory.Exists(newPath + (directoryCount > 0 ? "(" + directoryCount.ToString() + ")" : "")))
+		while (Directory.Exists(newPath + (directoryCount > 0 ? "(" + directoryCount.ToString() + ")" : "")))
 		{
 			directoryCount++;
 		}
@@ -1874,7 +1874,7 @@ public class PhysicalFileProvider
 			newPath = newPath.Substring(0, name);
 		}
 		int fileCount = 0;
-		while (System.IO.File.Exists(newPath + (fileCount > 0 ? "(" + fileCount.ToString() + ")" + Path.GetExtension(fileName) : Path.GetExtension(fileName))))
+		while (File.Exists(newPath + (fileCount > 0 ? "(" + fileCount.ToString() + ")" + Path.GetExtension(fileName) : Path.GetExtension(fileName))))
 		{
 			fileCount++;
 		}
@@ -2048,7 +2048,7 @@ public class PhysicalFileProvider
 				DateModified = info.LastWriteTime,
 				DateCreated = info.CreationTime,
 				Type = info.Extension,
-				HasChild = isFile ? false : (CheckChild(info.FullName)),
+				HasChild = isFile ? false : CheckChild(info.FullName),
 				FilterPath = filterPath,
 				Permission = GetPermission(GetPath(filterPath), info.Name, isFile)
 			};

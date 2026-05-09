@@ -1,22 +1,40 @@
+@using MudBlazor
+@using SVFDriveLibrary.Models.FileExplorer
 @using Syncfusion.Blazor.FileManager
 
 @if (!_isLoading)
 {
 	<div>
+		<SfGrid @ref="_sfGrid" DataSource="@_folderFiles" AllowSorting="true" AllowFiltering="true" AllowResizing="true"
+				CssClass="professional-grid" GridLines="GridLine.None" Toolbar="@ToolbarItems">
 
-		@if (_currentPath.FullName != _mainDriveFolder.FullName)
-		{
-			<SfButton Content="Back" OnClick='async () => await LoadParentFolderFiles()' />
-			<SfButton Content="Home" OnClick='async () => await LoadFolderFiles(_mainDriveFolder.FullName)' />
-			<SfButton Content="Refresh" OnClick='async () => await LoadFolderFiles()' />
-		}
+			<GridEvents OnToolbarClick="ToolbarClickHandler" OnRecordDoubleClick="RecordDoubleClickHandler" TValue="FileFolderModel" />
+			<GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
+			<GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel" />
 
-		@foreach (var item in _folderFiles)
-		{
-			<div>
-				<SfButton Content="@item.Name" @ondblclick="async () => { if (!item.IsFile) await LoadFolderFiles(item.FullName); }" />
-			</div>
-		}
+			<GridColumns>
+				<GridColumn Field="@nameof(FileFolderModel.Name)" HeaderText="Name">
+					<Template>
+						@{
+							var fileFolder = (context as FileFolderModel);
+							if (fileFolder.IsFile)
+							{
+								<MudImage Src="_content/SVFDrive.Shared/images/fileicon.png" Alt="File" Width="24" Height="24" />
+							}
+							else
+							{
+								<MudImage Src="_content/SVFDrive.Shared/images/foldericon.png" Alt="Folder" Width="24" Height="24" />
+							}
+							<span>@fileFolder.Name</span>
+						}
+					</Template>
+				</GridColumn>
+
+
+				<GridColumn Field="@nameof(FileFolderModel.LastWriteTime)" HeaderText="Date Modified" Width="200" Format="dd-MMM-yy hh:mm tt" Type="ColumnType.DateTime" />
+				<GridColumn Field="@nameof(FileFolderModel.LengthDisplay)" HeaderText="Size" Width="150" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right" />
+			</GridColumns>
+		</SfGrid>
 	</div>
 }
 

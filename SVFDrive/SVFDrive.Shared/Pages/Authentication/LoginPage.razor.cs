@@ -146,7 +146,7 @@ public partial class LoginPage
 				await UserData.InsertUser(_user);
 
 				await _passwordTextBox.FocusAsync();
-				throw new Exception($"Incorrect password. You have {(_maxLoginAttempts - _user.FailedAttempts)} attempts remaining.");
+				throw new Exception($"Incorrect password. You have {_maxLoginAttempts - _user.FailedAttempts} attempts remaining.");
 			}
 
 			await UserData.ResetInsertUser(_user);
