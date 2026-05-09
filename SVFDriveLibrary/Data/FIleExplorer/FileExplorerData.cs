@@ -17,10 +17,8 @@ public static class FileExplorerData
 		var request = new HttpRequestMessage(method, $"{fileManagerApiBase}api/{urlSuffix}");
 		using var response = await client.SendAsync(request);
 		if (response is not null && response.IsSuccessStatusCode)
-		{
-			var json = await response.Content.ReadAsStringAsync();
-			return json;
-		}
+			return await response.Content.ReadAsStringAsync();
+
 		throw new Exception($"Failed to load data from API. Status code: {response.StatusCode}, Reason: {response.ReasonPhrase}");
 	}
 	#endregion

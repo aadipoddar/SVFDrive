@@ -1,7 +1,7 @@
 @using MudBlazor
 @using SVFDriveLibrary.Models.FileExplorer
 
-<MudBlazor.MudHotkey Key=JsKey.Delete OnHotkeyPressed="() => DeleteFileFolderFromAPI()" />
+<MudBlazor.MudHotkey Key=JsKey.Delete OnHotkeyPressed="ShowDeleteConfirmation" />
 
 @if (!_isLoading)
 {
@@ -38,5 +38,8 @@
 		</SfGrid>
 	</div>
 }
+
+<DeleteConfirmationDialog @ref="_deleteConfirmationDialog" EntityName="Item" IdentifierLabel="Name"
+						  IdentifierValue="@_deleteItemName" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
 
 <ToastNotification @ref="_toastNotification" />

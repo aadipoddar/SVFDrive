@@ -21,6 +21,9 @@ public partial class FileExplorer
 	private SfGrid<FileFolderModel> _sfGrid;
 	private ToastNotification _toastNotification;
 
+	private string _deleteItemName = string.Empty;
+	private DeleteConfirmationDialog _deleteConfirmationDialog;
+
 	private List<object> ToolbarItems = [
 		new ItemModel() { Id = "GoBack", TooltipText = "Go back", PrefixIcon = "e-arrow-left" },
 		new ItemModel() { Id = "Home", TooltipText = "Home", PrefixIcon = "e-home" },
@@ -101,22 +104,15 @@ public partial class FileExplorer
 	#endregion
 
 	#region Actions
-	private async Task DeleteFileFolderFromAPI(string path = null)
+	private async Task DeleteFileFolderFromAPI()
 	{
 		try
 		{
-			if (string.IsNullOrWhiteSpace(path))
-			{
-				if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
-					throw new Exception("No file selected for deletion.");
-				
-				foreach (var selected in _sfGrid.SelectedRecords)
-					if (selected is not null)
-						await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName);
-			}
+			await _deleteConfirmationDialog.HideAsync();
 
-			else
-				await FileExplorerData.DeleteFileFolderFromAPI(path);
+			foreach (var selected in _sfGrid.SelectedRecords)
+				if (selected is not null)
+					await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName);
 		}
 		catch (Exception ex)
 		{
@@ -124,8 +120,30 @@ public partial class FileExplorer
 		}
 		finally
 		{
+			_deleteItemName = string.Empty;
 			await LoadFileFoldersFromAPI();
 		}
+	}
+
+	private async Task ShowDeleteConfirmation()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No file selected for deletion.", ToastType.Error);
+			return;
+		}
+
+		_deleteItemName = _sfGrid.SelectedRecords.Count == 1
+			? _sfGrid.SelectedRecords[0].Name
+			: $"{_sfGrid.SelectedRecords.Count} items";
+
+		await _deleteConfirmationDialog.ShowAsync();
+	}
+
+	private async Task CancelDelete()
+	{
+		_deleteItemName = string.Empty;
+		await _deleteConfirmationDialog.HideAsync();
 	}
 	#endregion
 
@@ -137,7 +155,7 @@ public partial class FileExplorer
 			case "GoBack": await LoadFileFoldersFromAPI(_currentPath.ParentFullName); break;
 			case "Home": await LoadFileFoldersFromAPI(_mainDriveFolder.FullName); break;
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
-			case "Delete": await DeleteFileFolderFromAPI(); break;
+			case "Delete": await ShowDeleteConfirmation(); break;
 		}
 	}
 

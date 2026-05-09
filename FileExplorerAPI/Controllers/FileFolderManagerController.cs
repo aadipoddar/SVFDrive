@@ -10,54 +10,51 @@ public class FileFolderManagerController : ControllerBase
 	#region Info
 	[HttpGet]
 	[Route("LoadFileFolderInfo")]
-	public async Task<object> LoadFileFolderInfo([FromQuery] string path)
+	public async Task<IActionResult> LoadFileFolderInfo([FromQuery] string path)
 	{
-		try
-		{
-			path = await FileFolderData.ValidateRootPath(path);
+		path = await FileFolderData.ValidateRootPath(path);
 
-			if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
-			{
-				var dir = new DirectoryInfo(path);
-				return FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: dir);
-			}
+		if (!System.IO.File.Exists(path) && !Directory.Exists(path))
+			return NotFound($"Path not found: {path}");
 
-			else
-			{
-				var fileInfo = new FileInfo(path);
-				return FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: fileInfo);
-			}
-		}
-		catch { return null; }
+		if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+			return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: new DirectoryInfo(path)));
+
+		return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: new FileInfo(path)));
 	}
 	#endregion
 
 	#region Lists
 	[HttpGet]
 	[Route("LoadFileFolders")]
-	public async Task<object> LoadFileFolders([FromQuery] string path)
+	public async Task<IActionResult> LoadFileFolders([FromQuery] string path)
 	{
 		path = await FileFolderData.ValidateRootPath(path);
-		return FileFolderData.LoadFileFoldersFromPath(path);
+
+		if (!Directory.Exists(path))
+			return NotFound($"Folder not found: {path}");
+
+		return Ok(FileFolderData.LoadFileFoldersFromPath(path));
 	}
 	#endregion
 
 	#region Actions
 	[HttpDelete]
 	[Route("DeleteFileFolder")]
-	public async Task DeleteFileFolder([FromQuery] string path)
+	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path)
 	{
-		try
-		{
-			path = await FileFolderData.ValidateRootPath(path);
+		path = await FileFolderData.ValidateRootPath(path);
 
-			if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
-				Directory.Delete(path, recursive: true);
+		if (Directory.Exists(path))
+			Directory.Delete(path, recursive: true);
 
-			else
-				System.IO.File.Delete(path);
-		}
-		catch { }
+		else if (System.IO.File.Exists(path))
+			System.IO.File.Delete(path);
+
+		else
+			return NotFound($"Path not found: {path}");
+
+		return NoContent();
 	}
 	#endregion
 }
