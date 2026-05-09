@@ -1,6 +1,8 @@
 @using MudBlazor
 @using SVFDriveLibrary.Models.FileExplorer
 
+<MudBlazor.MudHotkey Key=JsKey.Delete OnHotkeyPressed="() => DeleteFileFolderFromAPI()" />
+
 @if (!_isLoading)
 {
 	<div>

@@ -7,13 +7,14 @@ namespace SVFDriveLibrary.Data.FileExplorer;
 
 public static class FileExplorerData
 {
-	private static async Task<string> LoadJSONFromAPI(string urlSuffix)
+	#region API Calls
+	private static async Task<string> CallAPI(HttpMethod method, string urlSuffix)
 	{
 		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
 			?? throw new Exception("FileManagerApiBase setting is not configured.");
 
 		using var client = new HttpClient();
-		var request = new HttpRequestMessage(HttpMethod.Get, $"{fileManagerApiBase}api/{urlSuffix}");
+		var request = new HttpRequestMessage(method, $"{fileManagerApiBase}api/{urlSuffix}");
 		using var response = await client.SendAsync(request);
 		if (response is not null && response.IsSuccessStatusCode)
 		{
@@ -22,36 +23,42 @@ public static class FileExplorerData
 		}
 		throw new Exception($"Failed to load data from API. Status code: {response.StatusCode}, Reason: {response.ReasonPhrase}");
 	}
+	#endregion
 
+	#region Info
+	public static async Task<FileFolderModel> LoadFileFolderInfoFromAPI(string path)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var urlSuffix = $"FileFolderManager/LoadFileFolderInfo?path={encodedPath}";
+		var json = await CallAPI(HttpMethod.Get, urlSuffix);
+		return JsonSerializer.Deserialize<FileFolderModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new FileFolderModel();
+	}
+	#endregion
+
+	#region Lists
 	public static async Task<List<FileFolderModel>> LoadFileFoldersFromAPI(string path)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/GetFileFolders?path={encodedPath}";
-		var json = await LoadJSONFromAPI(urlSuffix);
+		var urlSuffix = $"FileFolderManager/LoadFileFolders?path={encodedPath}";
+		var json = await CallAPI(HttpMethod.Get, urlSuffix);
 		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
 	}
 
 	public static async Task<List<FileFolderModel>> LoadParentFileFoldersFromAPI(string path)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/GetParentFileFolders?path={encodedPath}";
-		var json = await LoadJSONFromAPI(urlSuffix);
+		var urlSuffix = $"FileFolderManager/LoadParentFileFolders?path={encodedPath}";
+		var json = await CallAPI(HttpMethod.Get, urlSuffix);
 		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
 	}
+	#endregion
 
-	public static async Task<FileFolderModel> GetFileInfoFromAPI(string path)
+	#region Actions
+	public static async Task DeleteFileFolderFromAPI(string path)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/GetFileInfo?path={encodedPath}";
-		var json = await LoadJSONFromAPI(urlSuffix);
-		return JsonSerializer.Deserialize<FileFolderModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new FileFolderModel();
+		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}";
+		await CallAPI(HttpMethod.Delete, urlSuffix);
 	}
-
-	public static async Task<FileFolderModel> GetFolderInfoFromAPI(string path)
-	{
-		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/GetFolderInfo?path={encodedPath}";
-		var json = await LoadJSONFromAPI(urlSuffix);
-		return JsonSerializer.Deserialize<FileFolderModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new FileFolderModel();
-	}
+	#endregion
 }

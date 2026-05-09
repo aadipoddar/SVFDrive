@@ -49,19 +49,37 @@ public partial class FileExplorer
 	private async Task InitializePage()
 	{
 		await LoadRootFolder();
-		await LoadFolderFiles();
+		await LoadFileFoldersFromAPI();
 	}
 
 	private async Task LoadRootFolder()
 	{
 		var rootFolder = (await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder)).Value;
-		_mainDriveFolder = await FileExplorerData.GetFolderInfoFromAPI(rootFolder);
+		_mainDriveFolder = await FileExplorerData.LoadFileFolderInfoFromAPI(rootFolder);
 		_currentPath = _mainDriveFolder;
 	}
 	#endregion
 
-	#region Folder File
-	private async Task LoadFolderFiles(string path = null)
+	#region Info
+	private async Task<FileFolderModel> LoadFileFolderInfoFromAPI(string path)
+	{
+		try
+		{
+			if (string.IsNullOrWhiteSpace(path))
+				path = _currentPath?.FullName;
+
+			return await FileExplorerData.LoadFileFolderInfoFromAPI(path);
+		}
+		catch (Exception ex)
+		{
+			await _toastNotification.ShowAsync("Error", $"Failed to get file info: {ex.Message}", ToastType.Error);
+			return null;
+		}
+	}
+	#endregion
+
+	#region Lists
+	private async Task LoadFileFoldersFromAPI(string path = null)
 	{
 		try
 		{
@@ -69,7 +87,7 @@ public partial class FileExplorer
 				path = _currentPath?.FullName;
 
 			_folderFiles = await FileExplorerData.LoadFileFoldersFromAPI(path);
-			_currentPath = await FileExplorerData.GetFolderInfoFromAPI(path);
+			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(path);
 		}
 		catch (Exception ex)
 		{
@@ -81,7 +99,7 @@ public partial class FileExplorer
 		}
 	}
 
-	private async Task LoadParentFolderFiles(string path = null)
+	private async Task LoadParentFileFoldersFromAPI(string path = null)
 	{
 		try
 		{
@@ -89,7 +107,7 @@ public partial class FileExplorer
 				path = _currentPath?.FullName;
 
 			_folderFiles = await FileExplorerData.LoadParentFileFoldersFromAPI(path);
-			_currentPath = await FileExplorerData.GetFolderInfoFromAPI(_currentPath.ParentFullName);
+			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(_currentPath.ParentFullName);
 		}
 		catch (Exception ex)
 		{
@@ -101,35 +119,33 @@ public partial class FileExplorer
 		}
 	}
 
-	private async Task<FileFolderModel> GetFileInfoFromAPI(string path)
+	#endregion
+
+	#region Actions
+	private async Task DeleteFileFolderFromAPI(string path = null)
 	{
 		try
 		{
 			if (string.IsNullOrWhiteSpace(path))
-				path = _currentPath?.FullName;
+			{
+				if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+					throw new Exception("No file selected for deletion.");
 
-			return await FileExplorerData.GetFileInfoFromAPI(path);
+				foreach (var selected in _sfGrid.SelectedRecords)
+					if (selected is not null)
+						await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName);
+			}
+
+			else
+				await FileExplorerData.DeleteFileFolderFromAPI(path);
 		}
 		catch (Exception ex)
 		{
-			await _toastNotification.ShowAsync("Error", $"Failed to get file info: {ex.Message}", ToastType.Error);
-			return null;
+			await _toastNotification.ShowAsync("Error", $"Failed to delete file: {ex.Message}", ToastType.Error);
 		}
-	}
-
-	private async Task<FileFolderModel> GetFolderInfoFromAPI(string path)
-	{
-		try
+		finally
 		{
-			if (string.IsNullOrWhiteSpace(path))
-				path = _currentPath?.FullName;
-
-			return await FileExplorerData.GetFolderInfoFromAPI(path);
-		}
-		catch (Exception ex)
-		{
-			await _toastNotification.ShowAsync("Error", $"Failed to get folder info: {ex.Message}", ToastType.Error);
-			return null;
+			await LoadFileFoldersFromAPI();
 		}
 	}
 	#endregion
@@ -137,18 +153,19 @@ public partial class FileExplorer
 	#region Utilities
 	public async Task ToolbarClickHandler(ClickEventArgs args)
 	{
-		if (args.Item.Id == "GoBack")
-			await LoadParentFolderFiles();
-		else if (args.Item.Id == "Home")
-			await LoadFolderFiles(_mainDriveFolder.FullName);
-		else if (args.Item.Id == "Refresh")
-			await LoadFolderFiles();
+		switch (args.Item.Id)
+		{
+			case "GoBack": await LoadParentFileFoldersFromAPI(); break;
+			case "Home": await LoadFileFoldersFromAPI(_mainDriveFolder.FullName); break;
+			case "Refresh": await LoadFileFoldersFromAPI(); break;
+			case "Delete": await DeleteFileFolderFromAPI(); break;
+		}
 	}
 
 	public async Task RecordDoubleClickHandler(RecordDoubleClickEventArgs<FileFolderModel> args)
 	{
 		if (!args.RowData.IsFile)
-			await LoadFolderFiles(args.RowData.FullName);
+			await LoadFileFoldersFromAPI(args.RowData.FullName);
 	}
 
 	private async Task DataGridRefresh()

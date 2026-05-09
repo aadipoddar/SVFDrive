@@ -7,17 +7,43 @@ namespace FileExplorerAPI.Controllers;
 [ApiController]
 public class FileFolderManagerController : ControllerBase
 {
+	#region Info
 	[HttpGet]
-	[Route("GetFileFolders")]
-	public async Task<object> GetFileFolders([FromQuery] string path)
+	[Route("LoadFileFolderInfo")]
+	public async Task<object> LoadFileFolderInfo([FromQuery] string path)
+	{
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
+
+			if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+			{
+				var dir = new DirectoryInfo(path);
+				return FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: dir);
+			}
+
+			else
+			{
+				var fileInfo = new FileInfo(path);
+				return FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: fileInfo);
+			}
+		}
+		catch { return null; }
+	}
+	#endregion
+
+	#region Lists
+	[HttpGet]
+	[Route("LoadFileFolders")]
+	public async Task<object> LoadFileFolders([FromQuery] string path)
 	{
 		path = await FileFolderData.ValidateRootPath(path);
 		return FileFolderData.LoadFileFoldersFromPath(path);
 	}
 
 	[HttpGet]
-	[Route("GetParentFileFolders")]
-	public async Task<object> GetParentFileFolders([FromQuery] string path)
+	[Route("LoadParentFileFolders")]
+	public async Task<object> LoadParentFileFolders([FromQuery] string path)
 	{
 		try
 		{
@@ -29,34 +55,24 @@ public class FileFolderManagerController : ControllerBase
 		}
 		catch { return null; }
 	}
+	#endregion
 
-	[HttpGet]
-	[Route("GetFileInfo")]
-	public async Task<object> GetFileInfo([FromQuery] string path)
+	#region Actions
+	[HttpDelete]
+	[Route("DeleteFileFolder")]
+	public async Task DeleteFileFolder([FromQuery] string path)
 	{
 		try
 		{
 			path = await FileFolderData.ValidateRootPath(path);
 
-			var fileInfo = new FileInfo(path);
+			if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+				Directory.Delete(path, recursive: true);
 
-			return FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: fileInfo);
+			else
+				System.IO.File.Delete(path);
 		}
-		catch { return null; }
+		catch { }
 	}
-
-	[HttpGet]
-	[Route("GetFolderInfo")]
-	public async Task<object> GetFolderInfo([FromQuery] string path)
-	{
-		try
-		{
-			path = await FileFolderData.ValidateRootPath(path);
-
-			var dir = new DirectoryInfo(path);
-
-			return FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: dir);
-		}
-		catch { return null; }
-	}
+	#endregion
 }
