@@ -43,14 +43,6 @@ public static class FileExplorerData
 		var json = await CallAPI(HttpMethod.Get, urlSuffix);
 		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
 	}
-
-	public static async Task<List<FileFolderModel>> LoadParentFileFoldersFromAPI(string path)
-	{
-		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/LoadParentFileFolders?path={encodedPath}";
-		var json = await CallAPI(HttpMethod.Get, urlSuffix);
-		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
-	}
 	#endregion
 
 	#region Actions

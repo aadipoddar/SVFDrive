@@ -40,21 +40,6 @@ public class FileFolderManagerController : ControllerBase
 		path = await FileFolderData.ValidateRootPath(path);
 		return FileFolderData.LoadFileFoldersFromPath(path);
 	}
-
-	[HttpGet]
-	[Route("LoadParentFileFolders")]
-	public async Task<object> LoadParentFileFolders([FromQuery] string path)
-	{
-		try
-		{
-			var dir = new DirectoryInfo(path);
-			var parentDir = dir.Parent ?? dir;
-
-			path = await FileFolderData.ValidateRootPath(parentDir.FullName);
-			return FileFolderData.LoadFileFoldersFromPath(path);
-		}
-		catch { return null; }
-	}
 	#endregion
 
 	#region Actions

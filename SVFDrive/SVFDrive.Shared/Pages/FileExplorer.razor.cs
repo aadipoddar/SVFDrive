@@ -98,27 +98,6 @@ public partial class FileExplorer
 			await DataGridRefresh();
 		}
 	}
-
-	private async Task LoadParentFileFoldersFromAPI(string path = null)
-	{
-		try
-		{
-			if (string.IsNullOrWhiteSpace(path))
-				path = _currentPath?.FullName;
-
-			_folderFiles = await FileExplorerData.LoadParentFileFoldersFromAPI(path);
-			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(_currentPath.ParentFullName);
-		}
-		catch (Exception ex)
-		{
-			await _toastNotification.ShowAsync("Error", $"Failed to load parent folder: {ex.Message}", ToastType.Error);
-		}
-		finally
-		{
-			await DataGridRefresh();
-		}
-	}
-
 	#endregion
 
 	#region Actions
@@ -130,7 +109,7 @@ public partial class FileExplorer
 			{
 				if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
 					throw new Exception("No file selected for deletion.");
-
+				
 				foreach (var selected in _sfGrid.SelectedRecords)
 					if (selected is not null)
 						await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName);
@@ -155,7 +134,7 @@ public partial class FileExplorer
 	{
 		switch (args.Item.Id)
 		{
-			case "GoBack": await LoadParentFileFoldersFromAPI(); break;
+			case "GoBack": await LoadFileFoldersFromAPI(_currentPath.ParentFullName); break;
 			case "Home": await LoadFileFoldersFromAPI(_mainDriveFolder.FullName); break;
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
 			case "Delete": await DeleteFileFolderFromAPI(); break;
