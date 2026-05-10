@@ -108,10 +108,10 @@ public static class UpdaterManager
 		fileStream.Close();
 
 		// Run batch script to extract and replace files after app closes
-		RunUpdateScript(zipPath, extractPath, appPath);
+		await RunUpdateScript(zipPath, extractPath, appPath);
 	}
 
-	private static void RunUpdateScript(string zipPath, string extractPath, string appPath)
+	private static async Task RunUpdateScript(string zipPath, string extractPath, string appPath)
 	{
 		var batchFilePath = Path.Combine(Path.GetTempPath(), "svfdrive_update.bat");
 		var exePath = Path.Combine(appPath, "SVFDrive.exe");
@@ -137,7 +137,7 @@ start """" ""{exePath}""
 del ""%~f0""
 ";
 
-		File.WriteAllText(batchFilePath, batchScript);
+		await File.WriteAllTextAsync(batchFilePath, batchScript);
 
 		var startInfo = new ProcessStartInfo
 		{

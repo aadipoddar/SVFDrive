@@ -1,4 +1,3 @@
-using Microsoft.JSInterop;
 using SVFDrive.Shared.Components.Dialog;
 using SVFDriveLibrary.Data.FileExplorer;
 using SVFDriveLibrary.Data.Operations;
@@ -217,7 +216,7 @@ public partial class FileExplorer
 			{
 				if (item is null) continue;
 				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile);
-				await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+				await BrowserLauncher.OpenAsync(url);
 			}
 		}
 		catch (Exception ex)

@@ -1,4 +1,5 @@
 ﻿using FileExplorerAPI.Data;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileExplorerAPI.Controllers;
@@ -78,6 +79,11 @@ public class FileFolderManagerController : ControllerBase
 		if (!Directory.Exists(validatedPath))
 			return NotFound($"Folder not found: {validatedPath}");
 
+		// ZipArchiveEntry's internal data-descriptor flush on dispose still calls sync Write.
+		// Async APIs reduce blocking but don't eliminate it — opt in for this endpoint only.
+		var bodyControl = HttpContext.Features.Get<IHttpBodyControlFeature>();
+		bodyControl?.AllowSynchronousIO = true;
+
 		var folderName = new DirectoryInfo(validatedPath).Name;
 		Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{folderName}.zip\"");
 		Response.ContentType = "application/zip";
@@ -145,7 +151,7 @@ public class FileFolderManagerController : ControllerBase
 			path = await FileFolderData.ValidateRootPath(path);
 
 			if (Directory.Exists(path))
-				Directory.Delete(path, recursive: true);
+				await Task.Run(() => Directory.Delete(path, recursive: true), HttpContext.RequestAborted);
 
 			else if (System.IO.File.Exists(path))
 				System.IO.File.Delete(path);

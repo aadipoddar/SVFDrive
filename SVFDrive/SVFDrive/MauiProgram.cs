@@ -27,6 +27,7 @@ public static class MauiProgram
 		// Add device-specific services used by the SVFDrive.Shared project
 		builder.Services.AddSingleton<IFormFactor, FormFactor>();
 		builder.Services.AddSingleton<ISaveAndViewService, SaveAndViewService>();
+		builder.Services.AddSingleton<IBrowserLauncher, BrowserLauncher>();
 		builder.Services.AddSingleton<IUpdateService, UpdateService>();
 		builder.Services.AddSingleton<IDataStorageService, DataStorageService>();
 		builder.Services.AddSingleton<IVibrationService, VibrationService>();

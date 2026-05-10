@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IVibrationService, VibrationService>();
 builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 builder.Services.AddScoped<ISaveAndViewService, SaveAndViewService>();
+builder.Services.AddScoped<IBrowserLauncher, BrowserLauncher>();
 builder.Services.AddScoped<ISoundService, SoundService>();
 builder.Services.AddScoped<IDataStorageService, DataStorageService>();
 
