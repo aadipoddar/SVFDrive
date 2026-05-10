@@ -10,9 +10,9 @@
 {
 	<div class="section-card">
 		<SfGrid @ref="_sfGrid" DataSource="@_folderFiles" AllowSorting="true" AllowFiltering="true" AllowResizing="true"
-				CssClass="professional-grid" GridLines="GridLine.None" Toolbar="@ToolbarItems">
+				CssClass="professional-grid" GridLines="GridLine.None" Toolbar="@ToolbarItems" ContextMenuItems="@_gridContextMenuItems">
 
-			<GridEvents OnToolbarClick="ToolbarClickHandler" OnRecordDoubleClick="RecordDoubleClickHandler" TValue="FileFolderModel" />
+			<GridEvents OnToolbarClick="ToolbarClickHandler" ContextMenuItemClicked="OnGridContextMenuItemClicked" OnRecordDoubleClick="RecordDoubleClickHandler" TValue="FileFolderModel" />
 			<GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Multiple"></GridSelectionSettings>
 			<GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel" />
 

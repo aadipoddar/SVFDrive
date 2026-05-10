@@ -36,13 +36,21 @@ public partial class FileExplorer
 		new ItemModel() { Type = ItemType.Separator},
 		new ItemModel() { Id = "Path" },
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
-		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
 		new ItemModel() { Id = "NewFile", TooltipText = "New File (Ctrl + M)", PrefixIcon = "e-plus" , Align = ItemAlign.Right},
+		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
-		new ItemModel() { Id = "Rename", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
-		new ItemModel() { Id = "Delete", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
+		new ItemModel() { Id = "RenameItem", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
+		new ItemModel() { Id = "DeleteItem", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
 		"Search"
+	];
+	private readonly List<ContextMenuItemModel> _gridContextMenuItems =
+	[
+		new() { Text = "New File (Ctrl + M)", Id = "NewFile", IconCss = "e-icons e-plus", Target = ".e-content" },
+		new() { Text = "New Folder (Ctrl + N)", Id = "NewFolder", IconCss = "e-icons e-folder", Target = ".e-content" },
+		new() { Separator = true },
+		new() { Text = "Rename (F2)", Id = "RenameItem", IconCss = "e-icons e-rename", Target = ".e-content" },
+		new() { Text = "Delete (Del)", Id = "DeleteItem", IconCss = "e-icons e-trash", Target = ".e-content" }
 	];
 
 	#region Load Data
@@ -243,8 +251,19 @@ public partial class FileExplorer
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
 			case "NewFile": await ShowNewFileDialog(); break;
-			case "Rename": await ShowRenameDialog(); break;
-			case "Delete": await ShowDeleteConfirmation(); break;
+			case "RenameItem": await ShowRenameDialog(); break;
+			case "DeleteItem": await ShowDeleteConfirmation(); break;
+		}
+	}
+
+	private async Task OnGridContextMenuItemClicked(ContextMenuClickEventArgs<FileFolderModel> args)
+	{
+		switch (args.Item.Id)
+		{
+			case "NewFile": await ShowNewFileDialog(); break;
+			case "NewFolder": await ShowNewFolderDialog(); break;
+			case "RenameItem": await ShowRenameDialog(); break;
+			case "DeleteItem": await ShowDeleteConfirmation(); break;
 		}
 	}
 
