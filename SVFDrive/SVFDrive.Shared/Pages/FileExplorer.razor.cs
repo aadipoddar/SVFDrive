@@ -1,3 +1,4 @@
+using Microsoft.JSInterop;
 using SVFDrive.Shared.Components.Dialog;
 using SVFDriveLibrary.Data.FileExplorer;
 using SVFDriveLibrary.Data.Operations;
@@ -39,6 +40,7 @@ public partial class FileExplorer
 		new ItemModel() { Id = "NewFile", TooltipText = "New File (Ctrl + M)", PrefixIcon = "e-plus" , Align = ItemAlign.Right},
 		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
+		new ItemModel() { Id = "DownloadItem", TooltipText = "Download", PrefixIcon = "e-download", Align = ItemAlign.Right},
 		new ItemModel() { Id = "RenameItem", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DeleteItem", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
@@ -49,6 +51,7 @@ public partial class FileExplorer
 		new() { Text = "New File (Ctrl + M)", Id = "NewFile", IconCss = "e-icons e-plus", Target = ".e-content" },
 		new() { Text = "New Folder (Ctrl + N)", Id = "NewFolder", IconCss = "e-icons e-folder", Target = ".e-content" },
 		new() { Separator = true },
+		new() { Text = "Download", Id = "DownloadItem", IconCss = "e-icons e-download", Target = ".e-content" },
 		new() { Text = "Rename (F2)", Id = "RenameItem", IconCss = "e-icons e-rename", Target = ".e-content" },
 		new() { Text = "Delete (Del)", Id = "DeleteItem", IconCss = "e-icons e-trash", Target = ".e-content" }
 	];
@@ -197,6 +200,33 @@ public partial class FileExplorer
 	}
 	#endregion
 
+	#region Download Upload
+	private async Task DownloadSelected()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected to download.", ToastType.Error);
+			return;
+		}
+
+		try
+		{
+			await _toastNotification.ShowAsync("Download Will Start", "Your download will start shortly.", ToastType.Info);
+
+			foreach (var item in _sfGrid.SelectedRecords)
+			{
+				if (item is null) continue;
+				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile);
+				await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+			}
+		}
+		catch (Exception ex)
+		{
+			await _toastNotification.ShowAsync("Error", $"Failed to start download: {ex.Message}", ToastType.Error);
+		}
+	}
+	#endregion
+
 	#region Delete
 	private async Task DeleteFileFolderFromAPI()
 	{
@@ -251,6 +281,7 @@ public partial class FileExplorer
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
 			case "NewFile": await ShowNewFileDialog(); break;
+			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
 		}
@@ -262,6 +293,7 @@ public partial class FileExplorer
 		{
 			case "NewFile": await ShowNewFileDialog(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
+			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
 		}

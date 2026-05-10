@@ -30,6 +30,7 @@ public static class FileFolderData
 	}
 	#endregion
 
+	#region Lists
 	internal static FileFolderModel ConvertFileFolderInfoToFileFolderModel(FileInfo fileInfo = null, DirectoryInfo folderInfo = null)
 	{
 		if (fileInfo is not null)
@@ -91,7 +92,30 @@ public static class FileFolderData
 
 		return items;
 	}
+	#endregion
 
+	#region Download Upload
+	internal static async Task StreamFolderAsZip(string folderPath, Stream output, CancellationToken cancellationToken)
+	{
+		await using var archive = await System.IO.Compression.ZipArchive.CreateAsync(
+			output, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true, entryNameEncoding: null, cancellationToken);
+
+		var rootLength = folderPath.Length + 1;
+		foreach (var file in Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories))
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var entryName = file[rootLength..].Replace('\\', '/');
+			var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.NoCompression);
+
+			await using var entryStream = await entry.OpenAsync(cancellationToken);
+			await using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
+			await fileStream.CopyToAsync(entryStream, cancellationToken);
+		}
+	}
+	#endregion
+
+	#region Actions
 	internal static void CreateFolder(string parentPath, string name)
 	{
 		ValidateName(name);
@@ -143,4 +167,5 @@ public static class FileFolderData
 		else
 			throw new FileNotFoundException($"Path not found: {path}");
 	}
+	#endregion
 }

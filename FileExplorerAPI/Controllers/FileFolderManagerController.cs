@@ -46,6 +46,52 @@ public class FileFolderManagerController : ControllerBase
 	}
 	#endregion
 
+	#region Download Upload
+	[HttpGet]
+	[Route("DownloadFile")]
+	public async Task<IActionResult> DownloadFile([FromQuery] string path)
+	{
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
+
+			if (!System.IO.File.Exists(path))
+				return NotFound($"File not found: {path}");
+
+			var fileName = Path.GetFileName(path);
+			return PhysicalFile(path, "application/octet-stream", fileName, enableRangeProcessing: true);
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error downloading file: {ex.Message}"); }
+	}
+
+	[HttpGet]
+	[Route("DownloadFolder")]
+	public async Task<IActionResult> DownloadFolder([FromQuery] string path)
+	{
+		string validatedPath;
+		try
+		{
+			validatedPath = await FileFolderData.ValidateRootPath(path);
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error validating path: {ex.Message}"); }
+
+		if (!Directory.Exists(validatedPath))
+			return NotFound($"Folder not found: {validatedPath}");
+
+		var folderName = new DirectoryInfo(validatedPath).Name;
+		Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{folderName}.zip\"");
+		Response.ContentType = "application/zip";
+
+		try
+		{
+			await FileFolderData.StreamFolderAsZip(validatedPath, Response.Body, HttpContext.RequestAborted);
+		}
+		catch (OperationCanceledException) { }
+
+		return new EmptyResult();
+	}
+	#endregion
+
 	#region Actions
 	[HttpPost]
 	[Route("CreateFolder")]

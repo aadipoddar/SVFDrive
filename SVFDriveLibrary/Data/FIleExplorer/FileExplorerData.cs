@@ -47,6 +47,19 @@ public static class FileExplorerData
 	}
 	#endregion
 
+	#region Download Upload
+	public static async Task<string> GetDownloadUrl(string path, bool isFolder)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var endpoint = isFolder ? "DownloadFolder" : "DownloadFile";
+		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}";
+		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
+			?? throw new Exception("FileManagerApiBase setting is not configured.");
+
+		return $"{fileManagerApiBase}api/{urlSuffix}";
+	}
+	#endregion
+
 	#region Actions
 	public static async Task CreateFolderFromAPI(string parentPath, string name)
 	{
