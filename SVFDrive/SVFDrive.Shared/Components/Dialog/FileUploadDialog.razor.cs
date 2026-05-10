@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Syncfusion.Blazor.Inputs;
 using Syncfusion.Blazor.Popups;
 
@@ -8,6 +9,9 @@ public partial class FileUploadDialog
 {
 	private SfDialog _dialog;
 	private bool _isVisible;
+	private bool _pendingMarked;
+
+	[Inject] private IJSRuntime JS { get; set; }
 
 	[Parameter] public string DestinationPath { get; set; } = "";
 	[Parameter] public string SaveUrl { get; set; } = "";
@@ -20,15 +24,27 @@ public partial class FileUploadDialog
 		SaveUrl = saveUrl;
 		RemoveUrl = removeUrl;
 		_isVisible = true;
+
+		if (!_pendingMarked)
+		{
+			await JS.InvokeVoidAsync("svfBeginPending");
+			_pendingMarked = true;
+		}
+
 		StateHasChanged();
-		await Task.CompletedTask;
 	}
 
 	public async Task HideAsync()
 	{
 		_isVisible = false;
+
+		if (_pendingMarked)
+		{
+			await JS.InvokeVoidAsync("svfEndPending");
+			_pendingMarked = false;
+		}
+
 		StateHasChanged();
-		await Task.CompletedTask;
 	}
 
 	private async Task HandleSuccess(SuccessEventArgs args)
