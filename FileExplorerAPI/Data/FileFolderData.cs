@@ -95,6 +95,22 @@ public static class FileFolderData
 	#endregion
 
 	#region Download Upload
+	internal static async Task StreamUploadToFile(string parentPath, string name, bool overwrite, Stream input, CancellationToken cancellationToken)
+	{
+		ValidateName(name);
+
+		if (!Directory.Exists(parentPath))
+			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
+
+		var destination = Path.Combine(parentPath, name);
+
+		if (!overwrite && (File.Exists(destination) || Directory.Exists(destination)))
+			throw new IOException($"An item named '{name}' already exists.");
+
+		await using var fs = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+		await input.CopyToAsync(fs, cancellationToken);
+	}
+
 	internal static async Task StreamFolderAsZip(string folderPath, Stream output, CancellationToken cancellationToken)
 	{
 		await using var archive = await System.IO.Compression.ZipArchive.CreateAsync(

@@ -48,6 +48,20 @@ public class FileFolderManagerController : ControllerBase
 	#endregion
 
 	#region Download Upload
+	[HttpPost]
+	[Route("UploadFile")]
+	[DisableRequestSizeLimit]
+	public async Task<IActionResult> UploadFile([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] bool overwrite = false)
+	{
+		try
+		{
+			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+			await FileFolderData.StreamUploadToFile(parentPath, name, overwrite, Request.Body, HttpContext.RequestAborted);
+			return NoContent();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error uploading file: {ex.Message}"); }
+	}
+
 	[HttpGet]
 	[Route("DownloadFile")]
 	public async Task<IActionResult> DownloadFile([FromQuery] string path)

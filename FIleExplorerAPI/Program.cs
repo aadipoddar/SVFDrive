@@ -1,9 +1,17 @@
-using Scalar.AspNetCore;
 using SVFDriveLibrary.DataAccess;
 
 SqlDataAccess.SetupConfiguration();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Allow TB-scale upload bodies. Per-endpoint validation still applies.
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = null);
+
+builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
+	.AllowAnyOrigin()
+	.AllowAnyHeader()
+	.AllowAnyMethod()
+	.WithExposedHeaders("Content-Disposition")));
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -13,12 +21,13 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
 	app.MapOpenApi();
-	app.MapScalarApiReference();
 }
 
 app.MapGet("/", () => "File Explorer API");
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 

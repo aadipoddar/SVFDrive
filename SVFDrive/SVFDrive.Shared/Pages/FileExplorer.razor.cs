@@ -1,3 +1,4 @@
+using Microsoft.JSInterop;
 using SVFDrive.Shared.Components.Dialog;
 using SVFDriveLibrary.Data.FileExplorer;
 using SVFDriveLibrary.Data.Operations;
@@ -39,6 +40,7 @@ public partial class FileExplorer
 		new ItemModel() { Id = "NewFile", TooltipText = "New File (Ctrl + M)", PrefixIcon = "e-plus" , Align = ItemAlign.Right},
 		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
+		new ItemModel() { Id = "UploadItem", TooltipText = "Upload Files", PrefixIcon = "e-upload-1", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DownloadItem", TooltipText = "Download", PrefixIcon = "e-download", Align = ItemAlign.Right},
 		new ItemModel() { Id = "RenameItem", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DeleteItem", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
@@ -50,6 +52,7 @@ public partial class FileExplorer
 		new() { Text = "New File (Ctrl + M)", Id = "NewFile", IconCss = "e-icons e-plus", Target = ".e-content" },
 		new() { Text = "New Folder (Ctrl + N)", Id = "NewFolder", IconCss = "e-icons e-folder", Target = ".e-content" },
 		new() { Separator = true },
+		new() { Text = "Upload Files", Id = "UploadItem", IconCss = "e-icons e-upload-1", Target = ".e-content" },
 		new() { Text = "Download", Id = "DownloadItem", IconCss = "e-icons e-download", Target = ".e-content" },
 		new() { Text = "Rename (F2)", Id = "RenameItem", IconCss = "e-icons e-rename", Target = ".e-content" },
 		new() { Text = "Delete (Del)", Id = "DeleteItem", IconCss = "e-icons e-trash", Target = ".e-content" }
@@ -224,6 +227,52 @@ public partial class FileExplorer
 			await _toastNotification.ShowAsync("Error", $"Failed to start download: {ex.Message}", ToastType.Error);
 		}
 	}
+
+	private DotNetObjectReference<FileExplorer> _uploadCallbackRef;
+
+	private async Task StartUpload()
+	{
+		if (_currentPath is null)
+			return;
+
+		try
+		{
+			var apiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
+				?? throw new Exception("FileManagerApiBase not configured.");
+
+			_uploadCallbackRef ??= DotNetObjectReference.Create(this);
+			await _toastNotification.ShowAsync("Upload Started", "Choose files to upload.", ToastType.Info);
+			await JSRuntime.InvokeVoidAsync("svfPickAndUpload", apiBase, _currentPath.FullName, _uploadCallbackRef, true);
+		}
+		catch (Exception ex)
+		{
+			await _toastNotification.ShowAsync("Error", $"Failed to start upload: {ex.Message}", ToastType.Error);
+		}
+	}
+
+	[JSInvokable]
+	public Task OnUploadProgress(string fileName, long loaded, long total) => Task.CompletedTask;
+
+	[JSInvokable]
+	public async Task OnUploadFileFinished(string fileName, bool success)
+	{
+		if (!success)
+			await _toastNotification.ShowAsync("Upload Failed", $"'{fileName}' did not upload.", ToastType.Error);
+	}
+
+	[JSInvokable]
+	public async Task OnUploadAllFinished(int succeeded, int failed)
+	{
+		if (succeeded == 0 && failed == 0)
+			return;
+
+		if (failed == 0)
+			await _toastNotification.ShowAsync("Uploaded", $"{succeeded} file(s) uploaded successfully.", ToastType.Success);
+		else
+			await _toastNotification.ShowAsync("Upload Finished", $"{succeeded} succeeded, {failed} failed.", ToastType.Error);
+
+		await LoadFileFoldersFromAPI();
+	}
 	#endregion
 
 	#region Delete
@@ -280,6 +329,7 @@ public partial class FileExplorer
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
 			case "NewFile": await ShowNewFileDialog(); break;
+			case "UploadItem": await StartUpload(); break;
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
@@ -292,6 +342,7 @@ public partial class FileExplorer
 		{
 			case "NewFile": await ShowNewFileDialog(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
+			case "UploadItem": await StartUpload(); break;
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
