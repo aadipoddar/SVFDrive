@@ -91,5 +91,17 @@ public static class FileExplorerData
 		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}";
 		await CallAPI(HttpMethod.Delete, urlSuffix);
 	}
+
+	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder)
+	{
+		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}";
+		await CallAPI(HttpMethod.Put, urlSuffix);
+	}
+
+	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder)
+	{
+		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
 	#endregion
 }

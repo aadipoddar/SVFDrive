@@ -24,6 +24,10 @@ public partial class FileExplorer
 	private EditDialogMode _editDialogMode;
 	private enum EditDialogMode { Rename, NewFolder, NewFile }
 
+	private List<string> _clipboardPaths = [];
+	private ClipboardMode _clipboardMode = ClipboardMode.None;
+	private enum ClipboardMode { None, Cut, Copy }
+
 	private string _deleteItemName = string.Empty;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
 
@@ -42,6 +46,10 @@ public partial class FileExplorer
 		new ItemModel() { Id = "NewFile", TooltipText = "New File (Ctrl + M)", PrefixIcon = "e-plus" , Align = ItemAlign.Right},
 		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
+		new ItemModel() { Id = "CutItem", TooltipText = "Cut (Ctrl + X)", PrefixIcon = "e-cut", Align = ItemAlign.Right},
+		new ItemModel() { Id = "CopyItem", TooltipText = "Copy (Ctrl + C)", PrefixIcon = "e-copy", Align = ItemAlign.Right},
+		new ItemModel() { Id = "PasteItem", TooltipText = "Paste (Ctrl + V)", PrefixIcon = "e-paste", Align = ItemAlign.Right},
+		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
 		new ItemModel() { Id = "UploadItem", TooltipText = "Upload Files", PrefixIcon = "e-upload-1", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DownloadItem", TooltipText = "Download", PrefixIcon = "e-download", Align = ItemAlign.Right},
 		new ItemModel() { Id = "RenameItem", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
@@ -53,6 +61,10 @@ public partial class FileExplorer
 	[
 		new() { Text = "New File (Ctrl + M)", Id = "NewFile", IconCss = "e-icons e-plus", Target = ".e-content" },
 		new() { Text = "New Folder (Ctrl + N)", Id = "NewFolder", IconCss = "e-icons e-folder", Target = ".e-content" },
+		new() { Separator = true },
+		new() { Text = "Cut (Ctrl + X)", Id = "CutItem", IconCss = "e-icons e-cut", Target = ".e-content" },
+		new() { Text = "Copy (Ctrl + C)", Id = "CopyItem", IconCss = "e-icons e-copy", Target = ".e-content" },
+		new() { Text = "Paste (Ctrl + V)", Id = "PasteItem", IconCss = "e-icons e-paste", Target = ".e-content" },
 		new() { Separator = true },
 		new() { Text = "Upload Files", Id = "UploadItem", IconCss = "e-icons e-upload-1", Target = ".e-content" },
 		new() { Text = "Download", Id = "DownloadItem", IconCss = "e-icons e-download", Target = ".e-content" },
@@ -253,6 +265,86 @@ public partial class FileExplorer
 	}
 	#endregion
 
+	#region Cut / Copy / Paste
+	private async Task CutSelected()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected.", ToastType.Error);
+			return;
+		}
+
+		_clipboardPaths = [.. _sfGrid.SelectedRecords.Where(r => r is not null).Select(r => r.FullName)];
+		_clipboardMode = ClipboardMode.Cut;
+		await _toastNotification.ShowAsync("Cut", $"{_clipboardPaths.Count} item(s) ready to move. Paste at destination.", ToastType.Info);
+	}
+
+	private async Task CopySelected()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected.", ToastType.Error);
+			return;
+		}
+
+		_clipboardPaths = [.. _sfGrid.SelectedRecords.Where(r => r is not null).Select(r => r.FullName)];
+		_clipboardMode = ClipboardMode.Copy;
+		await _toastNotification.ShowAsync("Copied", $"{_clipboardPaths.Count} item(s) ready to copy. Paste at destination.", ToastType.Info);
+	}
+
+	private async Task PasteHere()
+	{
+		if (_clipboardMode == ClipboardMode.None || _clipboardPaths.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Nothing to Paste", "Cut or copy items first.", ToastType.Info);
+			return;
+		}
+
+		if (_currentPath is null) return;
+
+		var mode = _clipboardMode;
+		var items = _clipboardPaths;
+		int succeeded = 0, failed = 0;
+
+		try
+		{
+			await _toastNotification.ShowAsync("Working", $"{(mode == ClipboardMode.Cut ? "Moving" : "Copying")} {items.Count} item(s)...", ToastType.Info);
+
+			foreach (var path in items)
+			{
+				try
+				{
+					if (mode == ClipboardMode.Cut)
+						await FileExplorerData.MoveFileFolderFromAPI(path, _currentPath.FullName);
+					else
+						await FileExplorerData.CopyFileFolderFromAPI(path, _currentPath.FullName);
+
+					succeeded++;
+				}
+				catch
+				{
+					failed++;
+				}
+			}
+
+			if (failed == 0)
+				await _toastNotification.ShowAsync("Done", $"{succeeded} item(s) {(mode == ClipboardMode.Cut ? "moved" : "copied")}.", ToastType.Success);
+			else
+				await _toastNotification.ShowAsync("Finished", $"{succeeded} succeeded, {failed} failed.", ToastType.Error);
+
+			if (mode == ClipboardMode.Cut)
+			{
+				_clipboardPaths = [];
+				_clipboardMode = ClipboardMode.None;
+			}
+		}
+		finally
+		{
+			await LoadFileFoldersFromAPI();
+		}
+	}
+	#endregion
+
 	#region Delete
 	private async Task DeleteFileFolderFromAPI()
 	{
@@ -307,6 +399,9 @@ public partial class FileExplorer
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
 			case "NewFile": await ShowNewFileDialog(); break;
+			case "CutItem": await CutSelected(); break;
+			case "CopyItem": await CopySelected(); break;
+			case "PasteItem": await PasteHere(); break;
 			case "UploadItem": await StartUpload(); break;
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
@@ -320,6 +415,9 @@ public partial class FileExplorer
 		{
 			case "NewFile": await ShowNewFileDialog(); break;
 			case "NewFolder": await ShowNewFolderDialog(); break;
+			case "CutItem": await CutSelected(); break;
+			case "CopyItem": await CopySelected(); break;
+			case "PasteItem": await PasteHere(); break;
 			case "UploadItem": await StartUpload(); break;
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;

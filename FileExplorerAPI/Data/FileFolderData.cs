@@ -176,6 +176,67 @@ public static class FileFolderData
 		using (File.Create(destination)) { }
 	}
 
+	internal static void MoveFileFolder(string source, string destinationFolder)
+	{
+		if (!Directory.Exists(destinationFolder))
+			throw new DirectoryNotFoundException($"Destination folder not found: {destinationFolder}");
+
+		var name = Path.GetFileName(source.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+		var destination = Path.Combine(destinationFolder, name);
+
+		if (string.Equals(source, destination, StringComparison.OrdinalIgnoreCase))
+			throw new IOException("Source and destination are the same.");
+
+		if (File.Exists(destination) || Directory.Exists(destination))
+			throw new IOException($"An item named '{name}' already exists in destination.");
+
+		if (Directory.Exists(source))
+			Directory.Move(source, destination);
+
+		else if (File.Exists(source))
+			File.Move(source, destination, overwrite: false);
+
+		else
+			throw new FileNotFoundException($"Source not found: {source}");
+	}
+
+	internal static void CopyFileFolder(string source, string destinationFolder)
+	{
+		if (!Directory.Exists(destinationFolder))
+			throw new DirectoryNotFoundException($"Destination folder not found: {destinationFolder}");
+
+		var name = Path.GetFileName(source.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+		var destination = Path.Combine(destinationFolder, name);
+
+		if (File.Exists(destination) || Directory.Exists(destination))
+			throw new IOException($"An item named '{name}' already exists in destination.");
+
+		if (Directory.Exists(source))
+		{
+			if (destination.StartsWith(source + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+				throw new IOException("Cannot copy a folder into itself.");
+
+			CopyDirectoryRecursive(source, destination);
+		}
+
+		else if (File.Exists(source))
+			File.Copy(source, destination, overwrite: false);
+
+		else
+			throw new FileNotFoundException($"Source not found: {source}");
+	}
+
+	private static void CopyDirectoryRecursive(string source, string destination)
+	{
+		Directory.CreateDirectory(destination);
+
+		foreach (var file in Directory.EnumerateFiles(source))
+			File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: false);
+
+		foreach (var dir in Directory.EnumerateDirectories(source))
+			CopyDirectoryRecursive(dir, Path.Combine(destination, Path.GetFileName(dir)));
+	}
+
 	internal static void RenameFileFolder(string path, string newName)
 	{
 		ValidateName(newName);

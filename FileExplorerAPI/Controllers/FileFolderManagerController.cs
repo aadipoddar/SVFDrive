@@ -71,9 +71,6 @@ public class FileFolderManagerController : ControllerBase
 
 			return Ok();
 		}
-		catch (ArgumentException ex) { return BadRequest(ex.Message); }
-		catch (UnauthorizedAccessException ex) { return StatusCode(403, ex.Message); }
-		catch (OperationCanceledException) { return StatusCode(499, "Upload cancelled."); }
 		catch (Exception ex) { return StatusCode(500, $"Error uploading file: {ex.Message}"); }
 	}
 
@@ -173,6 +170,36 @@ public class FileFolderManagerController : ControllerBase
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error creating file: {ex.Message}"); }
+	}
+
+	[HttpPut]
+	[Route("MoveFileFolder")]
+	public async Task<IActionResult> MoveFileFolder([FromQuery] string source, [FromQuery] string destinationFolder)
+	{
+		try
+		{
+			source = await FileFolderData.ValidateRootPath(source);
+			destinationFolder = await FileFolderData.ValidateRootPath(destinationFolder);
+
+			await Task.Run(() => FileFolderData.MoveFileFolder(source, destinationFolder), HttpContext.RequestAborted);
+			return NoContent();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error moving: {ex.Message}"); }
+	}
+
+	[HttpPost]
+	[Route("CopyFileFolder")]
+	public async Task<IActionResult> CopyFileFolder([FromQuery] string source, [FromQuery] string destinationFolder)
+	{
+		try
+		{
+			source = await FileFolderData.ValidateRootPath(source);
+			destinationFolder = await FileFolderData.ValidateRootPath(destinationFolder);
+
+			await Task.Run(() => FileFolderData.CopyFileFolder(source, destinationFolder), HttpContext.RequestAborted);
+			return NoContent();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error copying: {ex.Message}"); }
 	}
 
 	[HttpPut]
