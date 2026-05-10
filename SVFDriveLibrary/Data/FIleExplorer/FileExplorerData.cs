@@ -48,6 +48,14 @@ public static class FileExplorerData
 	#endregion
 
 	#region Actions
+	public static async Task RenameFileFolderFromAPI(string path, string newName)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var encodedNewName = Uri.EscapeDataString(newName);
+		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}";
+		await CallAPI(HttpMethod.Put, urlSuffix);
+	}
+
 	public static async Task DeleteFileFolderFromAPI(string path)
 	{
 		var encodedPath = Uri.EscapeDataString(path);

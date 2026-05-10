@@ -19,23 +19,6 @@ public static class FileFolderData
 		return path;
 	}
 
-	internal static List<FileFolderModel> LoadFileFoldersFromPath(string path)
-	{
-		var dir = new DirectoryInfo(path);
-		var folders = dir.GetDirectories();
-		var files = dir.GetFiles();
-
-		List<FileFolderModel> items = [];
-
-		foreach (var d in folders)
-			items.Add(ConvertFileFolderInfoToFileFolderModel(folderInfo: d));
-
-		foreach (var f in files)
-			items.Add(ConvertFileFolderInfoToFileFolderModel(fileInfo: f));
-
-		return items;
-	}
-
 	internal static FileFolderModel ConvertFileFolderInfoToFileFolderModel(FileInfo fileInfo = null, DirectoryInfo folderInfo = null)
 	{
 		if (fileInfo is not null)
@@ -79,5 +62,48 @@ public static class FileFolderData
 			};
 
 		return null;
+	}
+	
+	internal static List<FileFolderModel> LoadFileFoldersFromPath(string path)
+	{
+		var dir = new DirectoryInfo(path);
+		var folders = dir.GetDirectories();
+		var files = dir.GetFiles();
+
+		List<FileFolderModel> items = [];
+
+		foreach (var d in folders)
+			items.Add(ConvertFileFolderInfoToFileFolderModel(folderInfo: d));
+
+		foreach (var f in files)
+			items.Add(ConvertFileFolderInfoToFileFolderModel(fileInfo: f));
+
+		return items;
+	}
+
+	internal static void RenameFileFolder(string path, string newName)
+	{
+		if (string.IsNullOrWhiteSpace(newName))
+			throw new ArgumentException("New name cannot be empty.");
+
+		if (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || newName.Contains('/') || newName.Contains('\\') || newName.Contains(".."))
+			throw new ArgumentException($"Invalid name: '{newName}'.");
+
+		var parent = Path.GetDirectoryName(path)
+			?? throw new Exception("Cannot rename: parent folder not found.");
+
+		var destination = Path.Combine(parent, newName);
+
+		if (File.Exists(destination) || Directory.Exists(destination))
+			throw new IOException($"An item named '{newName}' already exists.");
+
+		if (Directory.Exists(path))
+			Directory.Move(path, destination);
+
+		else if (File.Exists(path))
+			File.Move(path, destination, overwrite: false);
+
+		else
+			throw new FileNotFoundException($"Path not found: {path}");
 	}
 }

@@ -18,11 +18,14 @@ public partial class FileExplorer
 
 	private List<FileFolderModel> _folderFiles = [];
 
-	private SfGrid<FileFolderModel> _sfGrid;
-	private ToastNotification _toastNotification;
+	private FileFolderModel _renameTarget;
+	private RenameDialog _renameDialog;
 
 	private string _deleteItemName = string.Empty;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
+
+	private SfGrid<FileFolderModel> _sfGrid;
+	private ToastNotification _toastNotification;
 
 	private List<object> ToolbarItems = [
 		new ItemModel() { Id = "GoBack", TooltipText = "Go back", PrefixIcon = "e-arrow-left" },
@@ -31,6 +34,7 @@ public partial class FileExplorer
 		new ItemModel() { Type = ItemType.Separator},
 		new ItemModel() { Id = "Path" },
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
+		new ItemModel() { Id = "Rename", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
 		new ItemModel() { Id = "Delete", TooltipText = "Delete", PrefixIcon = "e-delete", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
 		"Search"
@@ -103,7 +107,56 @@ public partial class FileExplorer
 	}
 	#endregion
 
-	#region Actions
+	#region Rename
+	private async Task ConfirmRename(string newName)
+	{
+		try
+		{
+			await _renameDialog.HideAsync();
+
+			if (_renameTarget is null)
+				return;
+
+			await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, newName);
+			await _toastNotification.ShowAsync("Renamed", $"Renamed to '{newName}' successfully.", ToastType.Success);
+		}
+		catch (Exception ex)
+		{
+			await _toastNotification.ShowAsync("Error", $"Failed to rename: {ex.Message}", ToastType.Error);
+		}
+		finally
+		{
+			_renameTarget = null;
+			await LoadFileFoldersFromAPI();
+		}
+	}
+
+	private async Task ShowRenameDialog()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected to rename.", ToastType.Error);
+			return;
+		}
+
+		if (_sfGrid.SelectedRecords.Count > 1)
+		{
+			await _toastNotification.ShowAsync("Error", "Select only one item to rename.", ToastType.Error);
+			return;
+		}
+
+		_renameTarget = _sfGrid.SelectedRecords[0];
+		await _renameDialog.ShowAsync(_renameTarget.Name);
+	}
+
+	private async Task CancelRename()
+	{
+		_renameTarget = null;
+		await _renameDialog.HideAsync();
+	}
+	#endregion
+
+	#region Delete
 	private async Task DeleteFileFolderFromAPI()
 	{
 		try
@@ -155,6 +208,7 @@ public partial class FileExplorer
 			case "GoBack": await LoadFileFoldersFromAPI(_currentPath.ParentFullName); break;
 			case "Home": await LoadFileFoldersFromAPI(_mainDriveFolder.FullName); break;
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
+			case "Rename": await ShowRenameDialog(); break;
 			case "Delete": await ShowDeleteConfirmation(); break;
 		}
 	}

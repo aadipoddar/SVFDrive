@@ -24,10 +24,6 @@ public class FileFolderManagerController : ControllerBase
 
 			return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: new FileInfo(path)));
 		}
-		catch (UnauthorizedAccessException ex)
-		{
-			return StatusCode(403, ex.Message);
-		}
 		catch (Exception ex)
 		{
 			return StatusCode(500, $"Error loading info: {ex.Message}");
@@ -49,10 +45,6 @@ public class FileFolderManagerController : ControllerBase
 
 			return Ok(FileFolderData.LoadFileFoldersFromPath(path));
 		}
-		catch (UnauthorizedAccessException ex)
-		{
-			return StatusCode(403, ex.Message);
-		}
 		catch (Exception ex)
 		{
 			return StatusCode(500, $"Error loading folder: {ex.Message}");
@@ -61,6 +53,26 @@ public class FileFolderManagerController : ControllerBase
 	#endregion
 
 	#region Actions
+	[HttpPut]
+	[Route("RenameFileFolder")]
+	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName)
+	{
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
+
+			if (!System.IO.File.Exists(path) && !Directory.Exists(path))
+				return NotFound($"Path not found: {path}");
+
+			FileFolderData.RenameFileFolder(path, newName);
+			return NoContent();
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, $"Error renaming path: {ex.Message}");
+		}
+	}
+
 	[HttpDelete]
 	[Route("DeleteFileFolder")]
 	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path)
@@ -79,10 +91,6 @@ public class FileFolderManagerController : ControllerBase
 				return NotFound($"Path not found: {path}");
 
 			return NoContent();
-		}
-		catch (UnauthorizedAccessException ex)
-		{
-			return StatusCode(403, ex.Message);
 		}
 		catch (Exception ex)
 		{

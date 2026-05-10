@@ -8,33 +8,24 @@
             <div class="cd-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     style="color: #dc2626;">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                     style="color: #2563eb;">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
-                <span>Delete @EntityName</span>
+                <span>Rename Item</span>
             </div>
         </Header>
         <Content>
             <div class="cd-body">
                 <div class="cd-detail">
-                    <span class="cd-detail-label">@IdentifierLabel:</span>
-                    <span class="cd-detail-value">@IdentifierValue</span>
+                    <span class="cd-detail-label">Current:</span>
+                    <span class="cd-detail-value">@CurrentName</span>
                 </div>
-                <p class="cd-note cd-note-danger">
-                    @if (IsPermanentDelete)
-                    {
-                        <text>This action cannot be undone.</text>
-                    }
-                    else
-                    {
-                        <text>This @EntityName.ToLower() can be recovered later.</text>
-                    }
-                </p>
+                <label class="cd-input-label">New name</label>
+                <SfTextBox @bind-Value="NewName" Placeholder="Enter new name" FloatLabelType="FloatLabelType.Never" CssClass="custom-textbox" />
                 <div class="cd-actions">
                     <button class="cd-btn cd-btn-cancel" @onclick="HandleCancel" disabled="@Disabled">Cancel</button>
-                    <button class="cd-btn cd-btn-danger" @onclick="HandleConfirm" disabled="@Disabled">Delete</button>
+                    <button class="cd-btn cd-btn-primary" @onclick="HandleConfirm" disabled="@Disabled">Rename</button>
                 </div>
             </div>
         </Content>

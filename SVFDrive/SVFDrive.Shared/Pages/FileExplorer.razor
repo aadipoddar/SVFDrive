@@ -2,6 +2,7 @@
 @using SVFDriveLibrary.Models.FileExplorer
 
 <MudBlazor.MudHotkey Key=JsKey.Delete OnHotkeyPressed="ShowDeleteConfirmation" />
+<MudBlazor.MudHotkey Key=JsKey.F2 OnHotkeyPressed="ShowRenameDialog" />
 
 @if (!_isLoading)
 {
@@ -41,7 +42,9 @@
 	</div>
 }
 
-<DeleteConfirmationDialog @ref="_deleteConfirmationDialog" EntityName="Item" IdentifierLabel="Name"
+<DeleteConfirmationDialog @ref="_deleteConfirmationDialog" EntityName="Item" IdentifierLabel="Name" IsPermanentDelete="true"
 						  IdentifierValue="@_deleteItemName" OnConfirm="DeleteFileFolderFromAPI" OnCancel="CancelDelete" />
+
+<RenameDialog @ref="_renameDialog" OnConfirm="ConfirmRename" OnCancel="CancelRename" />
 
 <ToastNotification @ref="_toastNotification" />
