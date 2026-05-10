@@ -1,0 +1,43 @@
+<SfDialog @ref="_dialog" Width="600px" IsModal="true" ShowCloseIcon="true" @bind-Visible="_isVisible" CssClass="confirm-dialog">
+
+	<MudBlazor.MudHotkey Key=JsKey.Escape OnHotkeyPressed="HideAsync" />
+
+	<DialogTemplates>
+		<Header>
+			<div class="cd-header">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+					 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+					 style="color: #2563eb;">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="17 8 12 3 7 8" />
+					<line x1="12" y1="3" x2="12" y2="15" />
+				</svg>
+				<span>Upload Files</span>
+			</div>
+		</Header>
+		<Content>
+			<div class="cd-body">
+				<div class="cd-detail">
+					<span class="cd-detail-label">Destination:</span>
+					<span class="cd-detail-value">@DestinationPath</span>
+				</div>
+
+				@if (!string.IsNullOrWhiteSpace(SaveUrl))
+				{
+					<SfUploader AutoUpload="true" ShowFileList="true" AllowMultiple="true" MaxFileSize="9223372036854775807" CssClass="custom-uploader">
+						<UploaderAsyncSettings SaveUrl="@SaveUrl" RemoveUrl="@RemoveUrl" ChunkSize="10485760" RetryCount="3" RetryAfterDelay="1500" />
+						<UploaderEvents Success="HandleSuccess" />
+					</SfUploader>
+				}
+
+				<p class="cd-note cd-note-info">
+					Files upload directly to the API in 10 MB chunks with automatic retry. Closing this dialog will not cancel ongoing uploads.
+				</p>
+
+				<div class="cd-actions">
+					<button class="cd-btn cd-btn-cancel" @onclick="HideAsync">Close</button>
+				</div>
+			</div>
+		</Content>
+	</DialogTemplates>
+</SfDialog>

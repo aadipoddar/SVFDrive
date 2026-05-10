@@ -14,6 +14,11 @@ public static class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
 	{
+		// Allow the WebView2 to make XHR requests to plain-HTTP API endpoints on the LAN.
+		// Internal office tool on a trusted network — required because the BlazorWebView
+		// itself loads over https:// and would otherwise block mixed content.
+		Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--disable-web-security --allow-running-insecure-content");
+
 		SqlDataAccess.SetupConfiguration();
 
 		var builder = MauiApp.CreateBuilder();

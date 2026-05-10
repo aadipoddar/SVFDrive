@@ -27,6 +27,8 @@ public partial class FileExplorer
 	private string _deleteItemName = string.Empty;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
 
+	private FileUploadDialog _fileUploadDialog;
+
 	private SfGrid<FileFolderModel> _sfGrid;
 	private ToastNotification _toastNotification;
 
@@ -228,8 +230,6 @@ public partial class FileExplorer
 		}
 	}
 
-	private DotNetObjectReference<FileExplorer> _uploadCallbackRef;
-
 	private async Task StartUpload()
 	{
 		if (_currentPath is null)
@@ -240,38 +240,16 @@ public partial class FileExplorer
 			var apiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
 				?? throw new Exception("FileManagerApiBase not configured.");
 
-			_uploadCallbackRef ??= DotNetObjectReference.Create(this);
-			await _toastNotification.ShowAsync("Upload Started", "Choose files to upload.", ToastType.Info);
-			await JSRuntime.InvokeVoidAsync("svfPickAndUpload", apiBase, _currentPath.FullName, _uploadCallbackRef, true);
+			var encodedParent = Uri.EscapeDataString(_currentPath.FullName);
+			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}";
+			var removeUrl = $"{apiBase}api/FileFolderManager/RemoveUploadedFile?parentPath={encodedParent}";
+
+			await _fileUploadDialog.ShowAsync(_currentPath.FullName, saveUrl, removeUrl);
 		}
 		catch (Exception ex)
 		{
 			await _toastNotification.ShowAsync("Error", $"Failed to start upload: {ex.Message}", ToastType.Error);
 		}
-	}
-
-	[JSInvokable]
-	public Task OnUploadProgress(string fileName, long loaded, long total) => Task.CompletedTask;
-
-	[JSInvokable]
-	public async Task OnUploadFileFinished(string fileName, bool success)
-	{
-		if (!success)
-			await _toastNotification.ShowAsync("Upload Failed", $"'{fileName}' did not upload.", ToastType.Error);
-	}
-
-	[JSInvokable]
-	public async Task OnUploadAllFinished(int succeeded, int failed)
-	{
-		if (succeeded == 0 && failed == 0)
-			return;
-
-		if (failed == 0)
-			await _toastNotification.ShowAsync("Uploaded", $"{succeeded} file(s) uploaded successfully.", ToastType.Success);
-		else
-			await _toastNotification.ShowAsync("Upload Finished", $"{succeeded} succeeded, {failed} failed.", ToastType.Error);
-
-		await LoadFileFoldersFromAPI();
 	}
 	#endregion
 

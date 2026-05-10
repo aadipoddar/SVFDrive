@@ -95,6 +95,20 @@ public static class FileFolderData
 	#endregion
 
 	#region Download Upload
+	internal static async Task AppendChunkToFile(string parentPath, string name, int chunkIndex, int totalChunks, Stream chunk, CancellationToken cancellationToken)
+	{
+		ValidateName(name);
+
+		if (!Directory.Exists(parentPath))
+			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
+
+		var destination = Path.Combine(parentPath, name);
+		var mode = chunkIndex == 0 ? FileMode.Create : FileMode.Append;
+
+		await using var fs = new FileStream(destination, mode, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+		await chunk.CopyToAsync(fs, cancellationToken);
+	}
+
 	internal static async Task StreamUploadToFile(string parentPath, string name, bool overwrite, Stream input, CancellationToken cancellationToken)
 	{
 		ValidateName(name);

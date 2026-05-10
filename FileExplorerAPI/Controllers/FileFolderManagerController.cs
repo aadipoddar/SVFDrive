@@ -51,15 +51,51 @@ public class FileFolderManagerController : ControllerBase
 	[HttpPost]
 	[Route("UploadFile")]
 	[DisableRequestSizeLimit]
-	public async Task<IActionResult> UploadFile([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] bool overwrite = false)
+	[RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+	public async Task<IActionResult> UploadFile([FromQuery] string parentPath)
 	{
 		try
 		{
 			parentPath = await FileFolderData.ValidateRootPath(parentPath);
-			await FileFolderData.StreamUploadToFile(parentPath, name, overwrite, Request.Body, HttpContext.RequestAborted);
-			return NoContent();
+
+			var form = await Request.ReadFormAsync(HttpContext.RequestAborted);
+			var file = form.Files.FirstOrDefault()
+				?? throw new ArgumentException("No file in form.");
+
+			int.TryParse(form["chunk-index"].FirstOrDefault(), out var chunkIndex);
+			int.TryParse(form["total-chunk"].FirstOrDefault(), out var totalChunks);
+			if (totalChunks == 0) totalChunks = 1;
+
+			await using var stream = file.OpenReadStream();
+			await FileFolderData.AppendChunkToFile(parentPath, file.FileName, chunkIndex, totalChunks, stream, HttpContext.RequestAborted);
+
+			return Ok();
 		}
+		catch (ArgumentException ex) { return BadRequest(ex.Message); }
+		catch (UnauthorizedAccessException ex) { return StatusCode(403, ex.Message); }
+		catch (OperationCanceledException) { return StatusCode(499, "Upload cancelled."); }
 		catch (Exception ex) { return StatusCode(500, $"Error uploading file: {ex.Message}"); }
+	}
+
+	[HttpPost]
+	[Route("RemoveUploadedFile")]
+	public async Task<IActionResult> RemoveUploadedFile([FromQuery] string parentPath)
+	{
+		try
+		{
+			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+			var form = await Request.ReadFormAsync(HttpContext.RequestAborted);
+			var name = form.Files.FirstOrDefault()?.FileName ?? form["filename"].FirstOrDefault();
+
+			if (string.IsNullOrWhiteSpace(name)) return BadRequest("No filename.");
+
+			var target = Path.Combine(parentPath, name);
+			if (System.IO.File.Exists(target))
+				System.IO.File.Delete(target);
+
+			return Ok();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error removing: {ex.Message}"); }
 	}
 
 	[HttpGet]

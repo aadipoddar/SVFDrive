@@ -48,4 +48,6 @@
 
 <EditDialog @ref="_editDialog" OnConfirm="HandleEditDialogConfirm" OnCancel="HandleEditDialogCancel" />
 
+<FileUploadDialog @ref="_fileUploadDialog" OnAnyUploadFinished="async () => await LoadFileFoldersFromAPI()" />
+
 <ToastNotification @ref="_toastNotification" />

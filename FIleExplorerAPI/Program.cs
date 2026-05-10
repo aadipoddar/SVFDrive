@@ -25,9 +25,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "File Explorer API");
 
-app.UseHttpsRedirection();
-
 app.UseCors();
+
+app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
