@@ -16,10 +16,14 @@ public static class FileExplorerData
 		using var client = new HttpClient();
 		var request = new HttpRequestMessage(method, $"{fileManagerApiBase}api/{urlSuffix}");
 		using var response = await client.SendAsync(request);
-		if (response is not null && response.IsSuccessStatusCode)
-			return await response.Content.ReadAsStringAsync();
 
-		throw new Exception($"Failed to load data from API. Status code: {response.StatusCode}, Reason: {response.ReasonPhrase}");
+		var body = response.Content is not null ? await response.Content.ReadAsStringAsync() : string.Empty;
+
+		if (response.IsSuccessStatusCode)
+			return body;
+
+		var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+		throw new Exception($"API error ({(int)response.StatusCode} {response.StatusCode}): {message}");
 	}
 	#endregion
 

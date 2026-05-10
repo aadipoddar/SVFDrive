@@ -5,7 +5,7 @@
 
 @if (!_isLoading)
 {
-	<div>
+	<div class="section-card">
 		<SfGrid @ref="_sfGrid" DataSource="@_folderFiles" AllowSorting="true" AllowFiltering="true" AllowResizing="true"
 				CssClass="professional-grid" GridLines="GridLine.None" Toolbar="@ToolbarItems">
 
@@ -18,16 +18,18 @@
 					<Template>
 						@{
 							var fileFolder = (context as FileFolderModel);
-							if (fileFolder.IsFile)
+						}
+						<div class="file-name-cell">
+							@if (fileFolder.IsFile)
 							{
-								<MudImage Src="_content/SVFDrive.Shared/images/fileicon.png" Alt="File" Width="24" Height="24" />
+								<MudImage Src="_content/SVFDrive.Shared/images/fileicon.png" Alt="File" Width="20" Height="20" />
 							}
 							else
 							{
-								<MudImage Src="_content/SVFDrive.Shared/images/foldericon.png" Alt="Folder" Width="24" Height="24" />
+								<MudImage Src="_content/SVFDrive.Shared/images/foldericon.png" Alt="Folder" Width="20" Height="20" />
 							}
 							<span>@fileFolder.Name</span>
-						}
+						</div>
 					</Template>
 				</GridColumn>
 
@@ -40,6 +42,6 @@
 }
 
 <DeleteConfirmationDialog @ref="_deleteConfirmationDialog" EntityName="Item" IdentifierLabel="Name"
-						  IdentifierValue="@_deleteItemName" OnConfirm="ConfirmDelete" OnCancel="CancelDelete" />
+						  IdentifierValue="@_deleteItemName" OnConfirm="DeleteFileFolderFromAPI" OnCancel="CancelDelete" />
 
 <ToastNotification @ref="_toastNotification" />

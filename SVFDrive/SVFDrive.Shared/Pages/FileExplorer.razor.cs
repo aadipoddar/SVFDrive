@@ -94,7 +94,7 @@ public partial class FileExplorer
 		}
 		catch (Exception ex)
 		{
-			await _toastNotification.ShowAsync("Error", $"Failed to load file explorer data: {ex.Message}", ToastType.Error);
+			await _toastNotification.ShowAsync("Error", ex.Message, ToastType.Error);
 		}
 		finally
 		{
@@ -116,7 +116,7 @@ public partial class FileExplorer
 		}
 		catch (Exception ex)
 		{
-			await _toastNotification.ShowAsync("Error", $"Failed to delete file: {ex.Message}", ToastType.Error);
+			await _toastNotification.ShowAsync("Error", ex.Message, ToastType.Error);
 		}
 		finally
 		{

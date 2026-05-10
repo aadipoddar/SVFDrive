@@ -12,15 +12,26 @@ public class FileFolderManagerController : ControllerBase
 	[Route("LoadFileFolderInfo")]
 	public async Task<IActionResult> LoadFileFolderInfo([FromQuery] string path)
 	{
-		path = await FileFolderData.ValidateRootPath(path);
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
 
-		if (!System.IO.File.Exists(path) && !Directory.Exists(path))
-			return NotFound($"Path not found: {path}");
+			if (!System.IO.File.Exists(path) && !Directory.Exists(path))
+				return NotFound($"Path not found: {path}");
 
-		if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
-			return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: new DirectoryInfo(path)));
+			if (System.IO.File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+				return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(folderInfo: new DirectoryInfo(path)));
 
-		return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: new FileInfo(path)));
+			return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: new FileInfo(path)));
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(403, ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, $"Error loading info: {ex.Message}");
+		}
 	}
 	#endregion
 
@@ -29,12 +40,23 @@ public class FileFolderManagerController : ControllerBase
 	[Route("LoadFileFolders")]
 	public async Task<IActionResult> LoadFileFolders([FromQuery] string path)
 	{
-		path = await FileFolderData.ValidateRootPath(path);
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
 
-		if (!Directory.Exists(path))
-			return NotFound($"Folder not found: {path}");
+			if (!Directory.Exists(path))
+				return NotFound($"Folder not found: {path}");
 
-		return Ok(FileFolderData.LoadFileFoldersFromPath(path));
+			return Ok(FileFolderData.LoadFileFoldersFromPath(path));
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(403, ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, $"Error loading folder: {ex.Message}");
+		}
 	}
 	#endregion
 
@@ -43,18 +65,29 @@ public class FileFolderManagerController : ControllerBase
 	[Route("DeleteFileFolder")]
 	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path)
 	{
-		path = await FileFolderData.ValidateRootPath(path);
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
 
-		if (Directory.Exists(path))
-			Directory.Delete(path, recursive: true);
+			if (Directory.Exists(path))
+				Directory.Delete(path, recursive: true);
 
-		else if (System.IO.File.Exists(path))
-			System.IO.File.Delete(path);
+			else if (System.IO.File.Exists(path))
+				System.IO.File.Delete(path);
 
-		else
-			return NotFound($"Path not found: {path}");
+			else
+				return NotFound($"Path not found: {path}");
 
-		return NoContent();
+			return NoContent();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(403, ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, $"Error deleting path: {ex.Message}");
+		}
 	}
 	#endregion
 }
