@@ -843,6 +843,12 @@ h1:focus {
     border-left-color: #2563eb;
 }
 
+.cd-note-warn {
+    color: #92400e;
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+}
+
 .cd-input-label {
     font-size: 12px;
     font-weight: 500;
@@ -909,4 +915,13 @@ h1:focus {
 
 .cd-btn-primary:hover:not(:disabled) {
     background: #1d4ed8;
+}
+
+.cd-btn-warn {
+    background: #ea580c;
+    color: #ffffff;
+}
+
+.cd-btn-warn:hover:not(:disabled) {
+    background: #c2410c;
 }

@@ -3,6 +3,8 @@
 
 <MudBlazor.MudHotkey Key=JsKey.Delete OnHotkeyPressed="ShowDeleteConfirmation" />
 <MudBlazor.MudHotkey Key=JsKey.F2 OnHotkeyPressed="ShowRenameDialog" />
+<MudBlazor.MudHotkey Key=JsKey.KeyN KeyModifiers=[JsKeyModifier.ControlLeft] OnHotkeyPressed="ShowNewFolderDialog" />
+<MudBlazor.MudHotkey Key=JsKey.KeyM KeyModifiers=[JsKeyModifier.ControlLeft] OnHotkeyPressed="ShowNewFileDialog" />
 
 @if (!_isLoading)
 {
@@ -42,9 +44,8 @@
 	</div>
 }
 
-<DeleteConfirmationDialog @ref="_deleteConfirmationDialog" EntityName="Item" IdentifierLabel="Name" IsPermanentDelete="true"
-						  IdentifierValue="@_deleteItemName" OnConfirm="DeleteFileFolderFromAPI" OnCancel="CancelDelete" />
+<DeleteConfirmationDialog @ref="_deleteConfirmationDialog" IdentifierValue="@_deleteItemName" OnConfirm="DeleteFileFolderFromAPI" OnCancel="CancelDelete" />
 
-<RenameDialog @ref="_renameDialog" OnConfirm="ConfirmRename" OnCancel="CancelRename" />
+<EditDialog @ref="_editDialog" OnConfirm="HandleEditDialogConfirm" OnCancel="HandleEditDialogCancel" />
 
 <ToastNotification @ref="_toastNotification" />

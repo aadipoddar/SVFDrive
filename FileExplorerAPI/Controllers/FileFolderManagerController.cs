@@ -24,10 +24,7 @@ public class FileFolderManagerController : ControllerBase
 
 			return Ok(FileFolderData.ConvertFileFolderInfoToFileFolderModel(fileInfo: new FileInfo(path)));
 		}
-		catch (Exception ex)
-		{
-			return StatusCode(500, $"Error loading info: {ex.Message}");
-		}
+		catch (Exception ex) { return StatusCode(500, $"Error loading info: {ex.Message}"); }
 	}
 	#endregion
 
@@ -45,14 +42,37 @@ public class FileFolderManagerController : ControllerBase
 
 			return Ok(FileFolderData.LoadFileFoldersFromPath(path));
 		}
-		catch (Exception ex)
-		{
-			return StatusCode(500, $"Error loading folder: {ex.Message}");
-		}
+		catch (Exception ex) { return StatusCode(500, $"Error loading folder: {ex.Message}"); }
 	}
 	#endregion
 
 	#region Actions
+	[HttpPost]
+	[Route("CreateFolder")]
+	public async Task<IActionResult> CreateFolder([FromQuery] string parentPath, [FromQuery] string name)
+	{
+		try
+		{
+			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+			FileFolderData.CreateFolder(parentPath, name);
+			return NoContent();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error creating folder: {ex.Message}"); }
+	}
+
+	[HttpPost]
+	[Route("CreateFile")]
+	public async Task<IActionResult> CreateFile([FromQuery] string parentPath, [FromQuery] string name)
+	{
+		try
+		{
+			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+			FileFolderData.CreateFile(parentPath, name);
+			return NoContent();
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error creating file: {ex.Message}"); }
+	}
+
 	[HttpPut]
 	[Route("RenameFileFolder")]
 	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName)
@@ -67,10 +87,7 @@ public class FileFolderManagerController : ControllerBase
 			FileFolderData.RenameFileFolder(path, newName);
 			return NoContent();
 		}
-		catch (Exception ex)
-		{
-			return StatusCode(500, $"Error renaming path: {ex.Message}");
-		}
+		catch (Exception ex) { return StatusCode(500, $"Error renaming path: {ex.Message}"); }
 	}
 
 	[HttpDelete]
@@ -92,10 +109,7 @@ public class FileFolderManagerController : ControllerBase
 
 			return NoContent();
 		}
-		catch (Exception ex)
-		{
-			return StatusCode(500, $"Error deleting path: {ex.Message}");
-		}
+		catch (Exception ex) { return StatusCode(500, $"Error deleting path: {ex.Message}"); }
 	}
 	#endregion
 }

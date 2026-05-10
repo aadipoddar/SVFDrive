@@ -139,11 +139,6 @@ else
 	</div>
 }
 
-<ResetConfirmationDialog @ref="_resetConfirmationDialog"
-						 Message="Are you sure you want to reset all settings to their default values?"
-						 WarningMessage="This will reset all system configuration including company linking, code prefixes, transaction prefixes, ledger associations, and login settings."
-						 NoteMessage="This action cannot be undone. You will need to reconfigure all settings manually."
-						 ConfirmButtonText="Reset Settings" Disabled="@_isProcessing" OnConfirm="ConfirmReset"
-						 OnCancel="CancelReset" />
+<ResetConfirmationDialog @ref="_resetConfirmationDialog" OnConfirm="ConfirmReset" OnCancel="CancelReset" />
 
 <ToastNotification @ref="_toastNotification" />

@@ -48,6 +48,22 @@ public static class FileExplorerData
 	#endregion
 
 	#region Actions
+	public static async Task CreateFolderFromAPI(string parentPath, string name)
+	{
+		var encodedParentPath = Uri.EscapeDataString(parentPath);
+		var encodedName = Uri.EscapeDataString(name);
+		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
+
+	public static async Task CreateFileFromAPI(string parentPath, string name)
+	{
+		var encodedParentPath = Uri.EscapeDataString(parentPath);
+		var encodedName = Uri.EscapeDataString(name);
+		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
+
 	public static async Task RenameFileFolderFromAPI(string path, string newName)
 	{
 		var encodedPath = Uri.EscapeDataString(path);

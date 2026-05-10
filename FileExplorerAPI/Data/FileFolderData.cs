@@ -6,6 +6,7 @@ namespace FileExplorerAPI.Data;
 
 public static class FileFolderData
 {
+	#region Validation
 	internal static async Task<string> ValidateRootPath(string path)
 	{
 		var rootFolder = (await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder)).Value;
@@ -18,6 +19,16 @@ public static class FileFolderData
 
 		return path;
 	}
+
+	private static void ValidateName(string name)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			throw new ArgumentException("Name cannot be empty.");
+
+		if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.Contains('/') || name.Contains('\\') || name.Contains(".."))
+			throw new ArgumentException($"Invalid name: '{name}'.");
+	}
+	#endregion
 
 	internal static FileFolderModel ConvertFileFolderInfoToFileFolderModel(FileInfo fileInfo = null, DirectoryInfo folderInfo = null)
 	{
@@ -81,13 +92,39 @@ public static class FileFolderData
 		return items;
 	}
 
+	internal static void CreateFolder(string parentPath, string name)
+	{
+		ValidateName(name);
+
+		if (!Directory.Exists(parentPath))
+			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
+
+		var destination = Path.Combine(parentPath, name);
+
+		if (Directory.Exists(destination) || File.Exists(destination))
+			throw new IOException($"An item named '{name}' already exists.");
+
+		Directory.CreateDirectory(destination);
+	}
+
+	internal static void CreateFile(string parentPath, string name)
+	{
+		ValidateName(name);
+
+		if (!Directory.Exists(parentPath))
+			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
+
+		var destination = Path.Combine(parentPath, name);
+
+		if (Directory.Exists(destination) || File.Exists(destination))
+			throw new IOException($"An item named '{name}' already exists.");
+
+		using (File.Create(destination)) { }
+	}
+
 	internal static void RenameFileFolder(string path, string newName)
 	{
-		if (string.IsNullOrWhiteSpace(newName))
-			throw new ArgumentException("New name cannot be empty.");
-
-		if (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || newName.Contains('/') || newName.Contains('\\') || newName.Contains(".."))
-			throw new ArgumentException($"Invalid name: '{newName}'.");
+		ValidateName(newName);
 
 		var parent = Path.GetDirectoryName(path)
 			?? throw new Exception("Cannot rename: parent folder not found.");

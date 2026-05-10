@@ -19,7 +19,9 @@ public partial class FileExplorer
 	private List<FileFolderModel> _folderFiles = [];
 
 	private FileFolderModel _renameTarget;
-	private RenameDialog _renameDialog;
+	private EditDialog _editDialog;
+	private EditDialogMode _editDialogMode;
+	private enum EditDialogMode { Rename, NewFolder, NewFile }
 
 	private string _deleteItemName = string.Empty;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
@@ -34,8 +36,11 @@ public partial class FileExplorer
 		new ItemModel() { Type = ItemType.Separator},
 		new ItemModel() { Id = "Path" },
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
+		new ItemModel() { Id = "NewFolder", TooltipText = "New Folder (Ctrl + N)", PrefixIcon = "e-folder", Align = ItemAlign.Right},
+		new ItemModel() { Id = "NewFile", TooltipText = "New File (Ctrl + M)", PrefixIcon = "e-plus" , Align = ItemAlign.Right},
+		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
 		new ItemModel() { Id = "Rename", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
-		new ItemModel() { Id = "Delete", TooltipText = "Delete", PrefixIcon = "e-delete", Align = ItemAlign.Right},
+		new ItemModel() { Id = "Delete", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
 		"Search"
 	];
@@ -107,22 +112,35 @@ public partial class FileExplorer
 	}
 	#endregion
 
-	#region Rename
-	private async Task ConfirmRename(string newName)
+	#region Rename / New
+	private async Task HandleEditDialogConfirm(string value)
 	{
 		try
 		{
-			await _renameDialog.HideAsync();
+			await _editDialog.HideAsync();
 
-			if (_renameTarget is null)
-				return;
+			switch (_editDialogMode)
+			{
+				case EditDialogMode.NewFolder:
+					await FileExplorerData.CreateFolderFromAPI(_currentPath.FullName, value);
+					await _toastNotification.ShowAsync("Created", $"Folder '{value}' created.", ToastType.Success);
+					break;
 
-			await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, newName);
-			await _toastNotification.ShowAsync("Renamed", $"Renamed to '{newName}' successfully.", ToastType.Success);
+				case EditDialogMode.NewFile:
+					await FileExplorerData.CreateFileFromAPI(_currentPath.FullName, value);
+					await _toastNotification.ShowAsync("Created", $"File '{value}' created.", ToastType.Success);
+					break;
+
+				case EditDialogMode.Rename:
+					if (_renameTarget is null) return;
+					await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, value);
+					await _toastNotification.ShowAsync("Renamed", $"Renamed to '{value}' successfully.", ToastType.Success);
+					break;
+			}
 		}
 		catch (Exception ex)
 		{
-			await _toastNotification.ShowAsync("Error", $"Failed to rename: {ex.Message}", ToastType.Error);
+			await _toastNotification.ShowAsync("Error", ex.Message, ToastType.Error);
 		}
 		finally
 		{
@@ -146,13 +164,28 @@ public partial class FileExplorer
 		}
 
 		_renameTarget = _sfGrid.SelectedRecords[0];
-		await _renameDialog.ShowAsync(_renameTarget.Name);
+		_editDialogMode = EditDialogMode.Rename;
+		await _editDialog.ShowAsync(_renameTarget.Name, _renameTarget.Name);
 	}
 
-	private async Task CancelRename()
+	private async Task ShowNewFolderDialog()
 	{
 		_renameTarget = null;
-		await _renameDialog.HideAsync();
+		_editDialogMode = EditDialogMode.NewFolder;
+		await _editDialog.ShowAsync();
+	}
+
+	private async Task ShowNewFileDialog()
+	{
+		_renameTarget = null;
+		_editDialogMode = EditDialogMode.NewFile;
+		await _editDialog.ShowAsync();
+	}
+
+	private async Task HandleEditDialogCancel()
+	{
+		_renameTarget = null;
+		await _editDialog.HideAsync();
 	}
 	#endregion
 
@@ -208,6 +241,8 @@ public partial class FileExplorer
 			case "GoBack": await LoadFileFoldersFromAPI(_currentPath.ParentFullName); break;
 			case "Home": await LoadFileFoldersFromAPI(_mainDriveFolder.FullName); break;
 			case "Refresh": await LoadFileFoldersFromAPI(); break;
+			case "NewFolder": await ShowNewFolderDialog(); break;
+			case "NewFile": await ShowNewFileDialog(); break;
 			case "Rename": await ShowRenameDialog(); break;
 			case "Delete": await ShowDeleteConfirmation(); break;
 		}
@@ -221,7 +256,9 @@ public partial class FileExplorer
 
 	private async Task DataGridRefresh()
 	{
-		ToolbarItems[4] = new ItemModel() { Id = "Path", Text = _currentPath?.FullName ?? string.Empty };
+		var pathIndex = ToolbarItems.FindIndex(i => i is ItemModel m && m.Id == "Path");
+		if (pathIndex >= 0)
+			ToolbarItems[pathIndex] = new ItemModel() { Id = "Path", Text = _currentPath?.FullName ?? string.Empty };
 
 		if (_sfGrid is not null)
 			await _sfGrid.Refresh();

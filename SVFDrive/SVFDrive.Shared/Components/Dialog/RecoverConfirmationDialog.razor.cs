@@ -8,25 +8,11 @@ public partial class RecoverConfirmationDialog
     private SfDialog _dialog;
     private bool _isVisible;
 
-    [Parameter]
-    public string EntityName { get; set; } = "Item";
+	[Parameter] public string IdentifierValue { get; set; } = "";
+	[Parameter] public EventCallback OnConfirm { get; set; }
+	[Parameter] public EventCallback OnCancel { get; set; }
 
-    [Parameter]
-    public string IdentifierLabel { get; set; } = "Name";
-
-    [Parameter]
-    public string IdentifierValue { get; set; } = "";
-
-    [Parameter]
-    public bool Disabled { get; set; }
-
-    [Parameter]
-    public EventCallback OnConfirm { get; set; }
-
-    [Parameter]
-    public EventCallback OnCancel { get; set; }
-
-    public async Task ShowAsync()
+	public async Task ShowAsync()
     {
         _isVisible = true;
         StateHasChanged();
