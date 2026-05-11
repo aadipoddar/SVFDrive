@@ -3,7 +3,7 @@ CREATE PROCEDURE [dbo].[Insert_UserPermission]
 	@UserId INT,
 	@Path VARCHAR(MAX),
 	@IsFile BIT,
-	@Read BIT,
+	@Deny BIT,
 	@Write BIT
 AS
 BEGIN
@@ -14,7 +14,7 @@ BEGIN
 			[UserId],
 			[Path],
 			[IsFile],
-			[Read],
+			[Deny],
 			[Write]
 		)
 		VALUES
@@ -22,7 +22,7 @@ BEGIN
 			@UserId,
 			@Path,
 			@IsFile,
-			@Read,
+			@Deny,
 			@Write
 		);
 
@@ -36,7 +36,7 @@ BEGIN
 			[UserId] = @UserId,
 			[Path] = @Path,
 			[IsFile] = @IsFile,
-			[Read] = @Read,
+			[Deny] = @Deny,
 			[Write] = @Write
 		WHERE
 			[Id] = @Id

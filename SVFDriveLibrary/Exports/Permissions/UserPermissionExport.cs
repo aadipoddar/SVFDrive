@@ -20,7 +20,7 @@ public static class UserPermissionExport
 			User = users.FirstOrDefault(u => u.Id == user.UserId)?.Name ?? "Unknown",
 			user.Path,
 			IsFile = user.IsFile ? "Yes" : "No",
-			Read = user.Read ? "Yes" : "No",
+			Deny = user.Deny ? "Yes" : "No",
 			Write = user.Write ? "Yes" : "No"
 		});
 
@@ -30,7 +30,7 @@ public static class UserPermissionExport
 			[nameof(UserPermissionModel.Path)] = new() { DisplayName = "Folder Path", Alignment = CellAlignment.Left, IsRequired = true },
 			["User"] = new() { DisplayName = "User", Alignment = CellAlignment.Left, IsRequired = true },
 			[nameof(UserPermissionModel.IsFile)] = new() { DisplayName = "Is File", Alignment = CellAlignment.Center, IncludeInTotal = false },
-			[nameof(UserPermissionModel.Read)] = new() { DisplayName = "Read", Alignment = CellAlignment.Center, IncludeInTotal = false },
+			[nameof(UserPermissionModel.Deny)] = new() { DisplayName = "Deny", Alignment = CellAlignment.Center, IncludeInTotal = false },
 			[nameof(UserPermissionModel.Write)] = new() { DisplayName = "Write", Alignment = CellAlignment.Center, IncludeInTotal = false }
 		};
 
@@ -40,7 +40,7 @@ public static class UserPermissionExport
 			"User",
 			nameof(UserPermissionModel.Path),
 			nameof(UserPermissionModel.IsFile),
-			nameof(UserPermissionModel.Read),
+			nameof(UserPermissionModel.Deny),
 			nameof(UserPermissionModel.Write)
 		];
 

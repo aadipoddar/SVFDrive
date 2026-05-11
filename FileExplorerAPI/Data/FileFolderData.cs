@@ -1,5 +1,7 @@
-﻿using SVFDriveLibrary.Data.Operations;
+﻿using SVFDriveLibrary.Data.Common;
+using SVFDriveLibrary.Data.Operations;
 using SVFDriveLibrary.Data.Permissions;
+using SVFDriveLibrary.DataAccess;
 using SVFDriveLibrary.Models.FileExplorer;
 using SVFDriveLibrary.Models.Operations;
 using SVFDriveLibrary.Models.Permissions;
@@ -93,31 +95,50 @@ public static class FileFolderData
 		if (items.Count == 0)
 			return items;
 
-		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
-		return FilterByPermissions(items, path, userPermissions);
+		return await FilterByPermissions(items, path, userId);
 	}
 
 	private static string NormalizeDirPath(string path) =>
 		Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
-	private static List<FileFolderModel> FilterByPermissions(List<FileFolderModel> items, string currentPath, List<UserPermissionModel> permissions)
+	private static async Task<List<FileFolderModel>> FilterByPermissions(List<FileFolderModel> items, string currentPath, int userId)
 	{
+		var _ = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
+			?? throw new Exception($"User not found: {userId}");
+
+		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
+
 		var current = NormalizeDirPath(currentPath);
 		var allowed = new Dictionary<string, FileFolderModel>(StringComparer.OrdinalIgnoreCase);
 
-		foreach (var p in permissions)
+		foreach (var p in userPermissions.Where(_ => !_.Deny))
 		{
 			var perm = NormalizeDirPath(p.Path);
 
 			// Permission is at or above current folder → user can see everything here
 			if (current.StartsWith(perm, StringComparison.OrdinalIgnoreCase))
-				return items;
+				foreach (var item in items)
+					allowed[item.FullName] = item;
 
 			// Permission is below current folder → expose only the child on the path to it
 			if (perm.StartsWith(current, StringComparison.OrdinalIgnoreCase))
 				foreach (var item in items)
 					if (perm.StartsWith(NormalizeDirPath(item.FullName), StringComparison.OrdinalIgnoreCase))
 						allowed[item.FullName] = item;
+		}
+
+		foreach (var p in userPermissions.Where(_ => _.Deny))
+		{
+			var perm = NormalizeDirPath(p.Path);
+
+			// Deny covers current folder or an ancestor → hide everything
+			if (current.StartsWith(perm, StringComparison.OrdinalIgnoreCase))
+				return [];
+
+			// Deny covers an item (or anything inside it) → remove it
+			foreach (var item in items)
+				if (NormalizeDirPath(item.FullName).StartsWith(perm, StringComparison.OrdinalIgnoreCase))
+					allowed.Remove(item.FullName);
 		}
 
 		return [.. allowed.Values];

@@ -88,9 +88,9 @@ else
 						</div>
 
 						<div class="form-field">
-							<label class="field-label">Read Permission</label>
+							<label class="field-label">Deny</label>
 							<div class="checkbox-wrapper">
-								<SfCheckBox @bind-Checked="_userPermission.Read" Label="Read" CssClass="custom-checkbox" />
+								<SfCheckBox @bind-Checked="_userPermission.Deny" Label="Deny" CssClass="custom-checkbox" />
 							</div>
 						</div>
 
@@ -142,11 +142,11 @@ else
 									}
 								</Template>
 							</GridColumn>
-							<GridColumn Field="@nameof(UserPermissionModel.Read)" HeaderText="Read" Width="110" TextAlign="TextAlign.Center">
+							<GridColumn Field="@nameof(UserPermissionModel.Deny)" HeaderText="Deny" Width="110" TextAlign="TextAlign.Center">
 								<Template>
 									@{
 										var item = (context as UserPermissionModel);
-										<span class="@(item.Read ? "grid-credit" : "grid-debit")">@(item.Read ? "Yes" : "No")</span>
+										<span class="@(item.Deny ? "grid-credit" : "grid-debit")">@(item.Deny ? "Yes" : "No")</span>
 									}
 								</Template>
 							</GridColumn>
