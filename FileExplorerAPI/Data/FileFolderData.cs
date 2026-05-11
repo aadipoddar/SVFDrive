@@ -103,14 +103,18 @@ public static class FileFolderData
 
 	private static async Task<List<FileFolderModel>> FilterByPermissions(List<FileFolderModel> items, string currentPath, int userId)
 	{
-		var _ = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
+		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
 
+		if (user.Admin)
+			return items;
+		
 		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
 
 		var current = NormalizeDirPath(currentPath);
 		var allowed = new Dictionary<string, FileFolderModel>(StringComparer.OrdinalIgnoreCase);
 
+		// Allowed Files / Folders
 		foreach (var p in userPermissions.Where(_ => !_.Deny))
 		{
 			var perm = NormalizeDirPath(p.Path);
@@ -127,6 +131,7 @@ public static class FileFolderData
 						allowed[item.FullName] = item;
 		}
 
+		// Denied Files / Folders
 		foreach (var p in userPermissions.Where(_ => _.Deny))
 		{
 			var perm = NormalizeDirPath(p.Path);
@@ -136,9 +141,32 @@ public static class FileFolderData
 				return [];
 
 			// Deny covers an item (or anything inside it) → remove it
-			foreach (var item in items)
+			foreach (var item in allowed.Values.ToList())
 				if (NormalizeDirPath(item.FullName).StartsWith(perm, StringComparison.OrdinalIgnoreCase))
 					allowed.Remove(item.FullName);
+		}
+
+		// Hidden Files / Folders
+		var sortedAllows = userPermissions
+			.Where(_ => !_.Deny)
+			.OrderByDescending(_ => _.Path.Length)
+			.ToList();
+
+		foreach (var item in allowed.Values.ToList())
+		{
+			if (!item.Attributes.HasFlag(FileAttributes.Hidden))
+				continue;
+
+			var itemPath = NormalizeDirPath(item.FullName);
+			var covering = sortedAllows.FirstOrDefault(p =>
+			{
+				var perm = NormalizeDirPath(p.Path);
+				return itemPath.StartsWith(perm, StringComparison.OrdinalIgnoreCase)
+					|| perm.StartsWith(itemPath, StringComparison.OrdinalIgnoreCase);
+			});
+
+			if (covering is null || !covering.ShowHidden)
+				allowed.Remove(item.FullName);
 		}
 
 		return [.. allowed.Values];

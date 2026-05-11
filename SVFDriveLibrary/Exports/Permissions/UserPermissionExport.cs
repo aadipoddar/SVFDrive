@@ -21,16 +21,18 @@ public static class UserPermissionExport
 			user.Path,
 			IsFile = user.IsFile ? "Yes" : "No",
 			Deny = user.Deny ? "Yes" : "No",
+			ShowHidden = user.ShowHidden ? "Yes" : "No",
 			Write = user.Write ? "Yes" : "No"
 		});
 
 		var columnSettings = new Dictionary<string, ReportColumnSetting>
 		{
 			[nameof(UserPermissionModel.Id)] = new() { DisplayName = "ID", Alignment = CellAlignment.Center, IncludeInTotal = false },
-			[nameof(UserPermissionModel.Path)] = new() { DisplayName = "Folder Path", Alignment = CellAlignment.Left, IsRequired = true },
+			[nameof(UserPermissionModel.Path)] = new() { DisplayName = "Path", Alignment = CellAlignment.Left, IsRequired = true },
 			["User"] = new() { DisplayName = "User", Alignment = CellAlignment.Left, IsRequired = true },
 			[nameof(UserPermissionModel.IsFile)] = new() { DisplayName = "Is File", Alignment = CellAlignment.Center, IncludeInTotal = false },
 			[nameof(UserPermissionModel.Deny)] = new() { DisplayName = "Deny", Alignment = CellAlignment.Center, IncludeInTotal = false },
+			[nameof(UserPermissionModel.ShowHidden)] = new() { DisplayName = "Show Hidden", Alignment = CellAlignment.Center, IncludeInTotal = false },
 			[nameof(UserPermissionModel.Write)] = new() { DisplayName = "Write", Alignment = CellAlignment.Center, IncludeInTotal = false }
 		};
 
@@ -41,6 +43,7 @@ public static class UserPermissionExport
 			nameof(UserPermissionModel.Path),
 			nameof(UserPermissionModel.IsFile),
 			nameof(UserPermissionModel.Deny),
+			nameof(UserPermissionModel.ShowHidden),
 			nameof(UserPermissionModel.Write)
 		];
 

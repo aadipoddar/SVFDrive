@@ -5,6 +5,7 @@ CREATE TABLE [dbo].[UserPermission]
 	[Path] VARCHAR(MAX) NOT NULL,
 	[IsFile] BIT NOT NULL DEFAULT 0,
 	[Deny] BIT NOT NULL DEFAULT 0,
+	[ShowHidden] BIT NOT NULL DEFAULT 0,
 	[Write] BIT NOT NULL DEFAULT 0,
     CONSTRAINT [FK_UserPermission_ToUser] FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id])
 )

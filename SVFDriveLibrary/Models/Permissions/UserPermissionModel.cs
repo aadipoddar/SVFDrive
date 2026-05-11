@@ -7,5 +7,6 @@ public class UserPermissionModel
 	public string Path { get; set; }
 	public bool IsFile { get; set; }
 	public bool Deny { get; set; }
+	public bool ShowHidden { get; set; }
 	public bool Write { get; set; }
 }
