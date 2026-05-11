@@ -9,4 +9,5 @@ public class UserPermissionModel
 	public bool Deny { get; set; }
 	public bool ShowHidden { get; set; }
 	public bool Write { get; set; }
+	public bool Delete { get; set; }
 }

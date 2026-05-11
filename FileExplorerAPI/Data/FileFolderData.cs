@@ -32,6 +32,47 @@ public static class FileFolderData
 		if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.Contains('/') || name.Contains('\\') || name.Contains(".."))
 			throw new ArgumentException($"Invalid name: '{name}'.");
 	}
+
+	private static string NormalizeDirPath(string path) =>
+		Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+	internal static async Task<bool> ValidateWritePermission(string path, int userId)
+	{
+		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
+			?? throw new Exception($"User not found: {userId}");
+		if (user.Admin)
+			return true;
+
+		var perms = await UserPermissionData.LoadUserPermissionByUserId(userId);
+		var target = NormalizeDirPath(path);
+
+		bool Covers(UserPermissionModel p) =>
+			target.StartsWith(NormalizeDirPath(p.Path), StringComparison.OrdinalIgnoreCase);
+
+		if (perms.Any(p => p.Deny && Covers(p)))
+			return false;
+
+		return perms.Any(p => !p.Deny && p.Write && Covers(p));
+	}
+
+	internal static async Task<bool> ValidateDeletePermission(string path, int userId)
+	{
+		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
+			?? throw new Exception($"User not found: {userId}");
+		if (user.Admin)
+			return true;
+
+		var perms = await UserPermissionData.LoadUserPermissionByUserId(userId);
+		var target = NormalizeDirPath(path);
+
+		bool Covers(UserPermissionModel p) =>
+			target.StartsWith(NormalizeDirPath(p.Path), StringComparison.OrdinalIgnoreCase);
+
+		if (perms.Any(p => p.Deny && Covers(p)))
+			return false;
+
+		return perms.Any(p => !p.Deny && p.Delete && Covers(p));
+	}
 	#endregion
 
 	#region Lists
@@ -95,20 +136,16 @@ public static class FileFolderData
 		if (items.Count == 0)
 			return items;
 
-		return await FilterByPermissions(items, path, userId);
+		return await FilterFileFoldersPermissions(items, path, userId);
 	}
 
-	private static string NormalizeDirPath(string path) =>
-		Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-
-	private static async Task<List<FileFolderModel>> FilterByPermissions(List<FileFolderModel> items, string currentPath, int userId)
+	private static async Task<List<FileFolderModel>> FilterFileFoldersPermissions(List<FileFolderModel> items, string currentPath, int userId)
 	{
 		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
-
 		if (user.Admin)
 			return items;
-		
+
 		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
 
 		var current = NormalizeDirPath(currentPath);
@@ -225,9 +262,12 @@ public static class FileFolderData
 	#endregion
 
 	#region Actions
-	internal static void CreateFolder(string parentPath, string name)
+	internal static async Task CreateFolder(string parentPath, string name, int userId)
 	{
 		ValidateName(name);
+		parentPath = await ValidateRootPath(parentPath);
+		if (!await ValidateWritePermission(parentPath, userId))
+			throw new UnauthorizedAccessException("You do not have permission to create a folder here.");
 
 		if (!Directory.Exists(parentPath))
 			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
@@ -240,9 +280,12 @@ public static class FileFolderData
 		Directory.CreateDirectory(destination);
 	}
 
-	internal static void CreateFile(string parentPath, string name)
+	internal static async Task CreateFile(string parentPath, string name, int userId)
 	{
 		ValidateName(name);
+		parentPath = await ValidateRootPath(parentPath);
+		if (!await ValidateWritePermission(parentPath, userId))
+			throw new UnauthorizedAccessException("You do not have permission to create a file here.");
 
 		if (!Directory.Exists(parentPath))
 			throw new DirectoryNotFoundException($"Parent folder not found: {parentPath}");
@@ -255,8 +298,20 @@ public static class FileFolderData
 		using (File.Create(destination)) { }
 	}
 
-	internal static void MoveFileFolder(string source, string destinationFolder)
+	internal static async Task MoveFileFolder(string source, string destinationFolder, int userId)
 	{
+		source = await ValidateRootPath(source);
+		destinationFolder = await ValidateRootPath(destinationFolder);
+
+		var sourceParent = Path.GetDirectoryName(source)
+			?? throw new DirectoryNotFoundException("Cannot move: source parent not found.");
+
+		if (!await ValidateDeletePermission(sourceParent, userId))
+			throw new UnauthorizedAccessException("You do not have permission to move from the source folder.");
+
+		if (!await ValidateWritePermission(destinationFolder, userId))
+			throw new UnauthorizedAccessException("You do not have permission to move into the destination folder.");
+
 		if (!Directory.Exists(destinationFolder))
 			throw new DirectoryNotFoundException($"Destination folder not found: {destinationFolder}");
 
@@ -279,8 +334,14 @@ public static class FileFolderData
 			throw new FileNotFoundException($"Source not found: {source}");
 	}
 
-	internal static void CopyFileFolder(string source, string destinationFolder)
+	internal static async Task CopyFileFolder(string source, string destinationFolder, int userId)
 	{
+		source = await ValidateRootPath(source);
+		destinationFolder = await ValidateRootPath(destinationFolder);
+
+		if (!await ValidateWritePermission(destinationFolder, userId))
+			throw new UnauthorizedAccessException("You do not have permission to copy into the destination folder.");
+
 		if (!Directory.Exists(destinationFolder))
 			throw new DirectoryNotFoundException($"Destination folder not found: {destinationFolder}");
 
@@ -316,12 +377,19 @@ public static class FileFolderData
 			CopyDirectoryRecursive(dir, Path.Combine(destination, Path.GetFileName(dir)));
 	}
 
-	internal static void RenameFileFolder(string path, string newName)
+	internal static async Task RenameFileFolder(string path, string newName, int userId)
 	{
 		ValidateName(newName);
+		path = await ValidateRootPath(path);
+
+		if (!File.Exists(path) && !Directory.Exists(path))
+			throw new FileNotFoundException($"Path not found: {path}");
 
 		var parent = Path.GetDirectoryName(path)
 			?? throw new Exception("Cannot rename: parent folder not found.");
+
+		if (!await ValidateWritePermission(parent, userId))
+			throw new UnauthorizedAccessException("You do not have permission to rename this item.");
 
 		var destination = Path.Combine(parent, newName);
 
@@ -336,6 +404,26 @@ public static class FileFolderData
 
 		else
 			throw new FileNotFoundException($"Path not found: {path}");
+	}
+
+	internal static async Task DeleteFileFolder(string path, int userId)
+	{
+		path = await ValidateRootPath(path);
+
+		if (!File.Exists(path) && !Directory.Exists(path))
+			throw new FileNotFoundException($"Path not found: {path}");
+
+		var parent = Path.GetDirectoryName(path)
+			?? throw new Exception("Cannot delete: parent folder not found.");
+
+		if (!await ValidateDeletePermission(parent, userId))
+			throw new UnauthorizedAccessException("You do not have permission to delete this item.");
+
+		if (Directory.Exists(path))
+			Directory.Delete(path, recursive: true);
+
+		else if (File.Exists(path))
+			File.Delete(path);
 	}
 	#endregion
 }

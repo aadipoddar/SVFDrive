@@ -22,7 +22,8 @@ public static class UserPermissionExport
 			IsFile = user.IsFile ? "Yes" : "No",
 			Deny = user.Deny ? "Yes" : "No",
 			ShowHidden = user.ShowHidden ? "Yes" : "No",
-			Write = user.Write ? "Yes" : "No"
+			Write = user.Write ? "Yes" : "No",
+			Delete = user.Delete ? "Yes" : "No"
 		});
 
 		var columnSettings = new Dictionary<string, ReportColumnSetting>
@@ -33,7 +34,8 @@ public static class UserPermissionExport
 			[nameof(UserPermissionModel.IsFile)] = new() { DisplayName = "Is File", Alignment = CellAlignment.Center, IncludeInTotal = false },
 			[nameof(UserPermissionModel.Deny)] = new() { DisplayName = "Deny", Alignment = CellAlignment.Center, IncludeInTotal = false },
 			[nameof(UserPermissionModel.ShowHidden)] = new() { DisplayName = "Show Hidden", Alignment = CellAlignment.Center, IncludeInTotal = false },
-			[nameof(UserPermissionModel.Write)] = new() { DisplayName = "Write", Alignment = CellAlignment.Center, IncludeInTotal = false }
+			[nameof(UserPermissionModel.Write)] = new() { DisplayName = "Write", Alignment = CellAlignment.Center, IncludeInTotal = false },
+			[nameof(UserPermissionModel.Delete)] = new() { DisplayName = "Delete", Alignment = CellAlignment.Center, IncludeInTotal = false }
 		};
 
 		List<string> columnOrder =
@@ -44,7 +46,8 @@ public static class UserPermissionExport
 			nameof(UserPermissionModel.IsFile),
 			nameof(UserPermissionModel.Deny),
 			nameof(UserPermissionModel.ShowHidden),
-			nameof(UserPermissionModel.Write)
+			nameof(UserPermissionModel.Write),
+			nameof(UserPermissionModel.Delete)
 		];
 
 		var currentDateTime = await CommonData.LoadCurrentDateTime();

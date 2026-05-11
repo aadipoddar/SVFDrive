@@ -151,18 +151,18 @@ public partial class FileExplorer
 			switch (_editDialogMode)
 			{
 				case EditDialogMode.NewFolder:
-					await FileExplorerData.CreateFolderFromAPI(_currentPath.FullName, value);
+					await FileExplorerData.CreateFolderFromAPI(_currentPath.FullName, value, _user.Id);
 					await _toastNotification.ShowAsync("Created", $"Folder '{value}' created.", ToastType.Success);
 					break;
 
 				case EditDialogMode.NewFile:
-					await FileExplorerData.CreateFileFromAPI(_currentPath.FullName, value);
+					await FileExplorerData.CreateFileFromAPI(_currentPath.FullName, value, _user.Id);
 					await _toastNotification.ShowAsync("Created", $"File '{value}' created.", ToastType.Success);
 					break;
 
 				case EditDialogMode.Rename:
 					if (_renameTarget is null) return;
-					await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, value);
+					await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, value, _user.Id);
 					await _toastNotification.ShowAsync("Renamed", $"Renamed to '{value}' successfully.", ToastType.Success);
 					break;
 			}
@@ -255,7 +255,7 @@ public partial class FileExplorer
 				?? throw new Exception("FileManagerApiBase not configured.");
 
 			var encodedParent = Uri.EscapeDataString(_currentPath.FullName);
-			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}";
+			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}&userId={_user.Id}";
 			var removeUrl = $"{apiBase}api/FileFolderManager/RemoveUploadedFile?parentPath={encodedParent}";
 
 			await _fileUploadDialog.ShowAsync(_currentPath.FullName, saveUrl, removeUrl);
@@ -317,9 +317,9 @@ public partial class FileExplorer
 				try
 				{
 					if (mode == ClipboardMode.Cut)
-						await FileExplorerData.MoveFileFolderFromAPI(path, _currentPath.FullName);
+						await FileExplorerData.MoveFileFolderFromAPI(path, _currentPath.FullName, _user.Id);
 					else
-						await FileExplorerData.CopyFileFolderFromAPI(path, _currentPath.FullName);
+						await FileExplorerData.CopyFileFolderFromAPI(path, _currentPath.FullName, _user.Id);
 
 					succeeded++;
 				}
@@ -356,7 +356,7 @@ public partial class FileExplorer
 
 			foreach (var selected in _sfGrid.SelectedRecords)
 				if (selected is not null)
-					await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName);
+					await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName, _user.Id);
 		}
 		catch (Exception ex)
 		{

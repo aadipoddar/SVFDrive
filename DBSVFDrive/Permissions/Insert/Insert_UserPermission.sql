@@ -5,7 +5,8 @@ CREATE PROCEDURE [dbo].[Insert_UserPermission]
 	@IsFile BIT,
 	@Deny BIT,
 	@ShowHidden BIT,
-	@Write BIT
+	@Write BIT,
+	@Delete BIT
 AS
 BEGIN
 	IF @Id = 0
@@ -17,7 +18,8 @@ BEGIN
 			[IsFile],
 			[Deny],
 			[ShowHidden],
-			[Write]
+			[Write],
+			[Delete]
 		)
 		VALUES
 		(
@@ -26,7 +28,8 @@ BEGIN
 			@IsFile,
 			@Deny,
 			@ShowHidden,
-			@Write
+			@Write,
+			@Delete
 		);
 
 		SET @Id = SCOPE_IDENTITY();
@@ -41,7 +44,8 @@ BEGIN
 			[IsFile] = @IsFile,
 			[Deny] = @Deny,
 			[ShowHidden] = @ShowHidden,
-			[Write] = @Write
+			[Write] = @Write,
+			[Delete] = @Delete
 		WHERE
 			[Id] = @Id
 	END

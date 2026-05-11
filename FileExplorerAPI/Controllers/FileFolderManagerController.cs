@@ -52,11 +52,14 @@ public class FileFolderManagerController : ControllerBase
 	[Route("UploadFile")]
 	[DisableRequestSizeLimit]
 	[RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
-	public async Task<IActionResult> UploadFile([FromQuery] string parentPath)
+	public async Task<IActionResult> UploadFile([FromQuery] string parentPath, [FromQuery] int userId)
 	{
 		try
 		{
 			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+
+			if (!await FileFolderData.ValidateWritePermission(parentPath, userId))
+				return StatusCode(403, "You do not have permission to upload here.");
 
 			var form = await Request.ReadFormAsync(HttpContext.RequestAborted);
 			var file = form.Files.FirstOrDefault()
@@ -148,12 +151,11 @@ public class FileFolderManagerController : ControllerBase
 	#region Actions
 	[HttpPost]
 	[Route("CreateFolder")]
-	public async Task<IActionResult> CreateFolder([FromQuery] string parentPath, [FromQuery] string name)
+	public async Task<IActionResult> CreateFolder([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId)
 	{
 		try
 		{
-			parentPath = await FileFolderData.ValidateRootPath(parentPath);
-			FileFolderData.CreateFolder(parentPath, name);
+			await FileFolderData.CreateFolder(parentPath, name, userId);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error creating folder: {ex.Message}"); }
@@ -161,12 +163,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPost]
 	[Route("CreateFile")]
-	public async Task<IActionResult> CreateFile([FromQuery] string parentPath, [FromQuery] string name)
+	public async Task<IActionResult> CreateFile([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId)
 	{
 		try
 		{
-			parentPath = await FileFolderData.ValidateRootPath(parentPath);
-			FileFolderData.CreateFile(parentPath, name);
+			await FileFolderData.CreateFile(parentPath, name, userId);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error creating file: {ex.Message}"); }
@@ -174,14 +175,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPut]
 	[Route("MoveFileFolder")]
-	public async Task<IActionResult> MoveFileFolder([FromQuery] string source, [FromQuery] string destinationFolder)
+	public async Task<IActionResult> MoveFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId)
 	{
 		try
 		{
-			source = await FileFolderData.ValidateRootPath(source);
-			destinationFolder = await FileFolderData.ValidateRootPath(destinationFolder);
-
-			await Task.Run(() => FileFolderData.MoveFileFolder(source, destinationFolder), HttpContext.RequestAborted);
+			await Task.Run(async () => await FileFolderData.MoveFileFolder(source, destinationFolder, userId), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error moving: {ex.Message}"); }
@@ -189,14 +187,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPost]
 	[Route("CopyFileFolder")]
-	public async Task<IActionResult> CopyFileFolder([FromQuery] string source, [FromQuery] string destinationFolder)
+	public async Task<IActionResult> CopyFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId)
 	{
 		try
 		{
-			source = await FileFolderData.ValidateRootPath(source);
-			destinationFolder = await FileFolderData.ValidateRootPath(destinationFolder);
-
-			await Task.Run(() => FileFolderData.CopyFileFolder(source, destinationFolder), HttpContext.RequestAborted);
+			await Task.Run(async () => await FileFolderData.CopyFileFolder(source, destinationFolder, userId), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error copying: {ex.Message}"); }
@@ -204,16 +199,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPut]
 	[Route("RenameFileFolder")]
-	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName)
+	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName, [FromQuery] int userId)
 	{
 		try
 		{
-			path = await FileFolderData.ValidateRootPath(path);
-
-			if (!System.IO.File.Exists(path) && !Directory.Exists(path))
-				return NotFound($"Path not found: {path}");
-
-			FileFolderData.RenameFileFolder(path, newName);
+			await FileFolderData.RenameFileFolder(path, newName, userId);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error renaming path: {ex.Message}"); }
@@ -221,21 +211,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpDelete]
 	[Route("DeleteFileFolder")]
-	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path)
+	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path, [FromQuery] int userId)
 	{
 		try
 		{
-			path = await FileFolderData.ValidateRootPath(path);
-
-			if (Directory.Exists(path))
-				await Task.Run(() => Directory.Delete(path, recursive: true), HttpContext.RequestAborted);
-
-			else if (System.IO.File.Exists(path))
-				System.IO.File.Delete(path);
-
-			else
-				return NotFound($"Path not found: {path}");
-
+			await Task.Run(async () => await FileFolderData.DeleteFileFolder(path, userId), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error deleting path: {ex.Message}"); }

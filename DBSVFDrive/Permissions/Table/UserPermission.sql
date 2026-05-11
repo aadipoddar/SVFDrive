@@ -7,5 +7,6 @@ CREATE TABLE [dbo].[UserPermission]
 	[Deny] BIT NOT NULL DEFAULT 0,
 	[ShowHidden] BIT NOT NULL DEFAULT 0,
 	[Write] BIT NOT NULL DEFAULT 0,
+	[Delete] BIT NOT NULL DEFAULT 0,
     CONSTRAINT [FK_UserPermission_ToUser] FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id])
 )

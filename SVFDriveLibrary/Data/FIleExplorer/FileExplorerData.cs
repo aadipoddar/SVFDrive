@@ -61,46 +61,46 @@ public static class FileExplorerData
 	#endregion
 
 	#region Actions
-	public static async Task CreateFolderFromAPI(string parentPath, string name)
+	public static async Task CreateFolderFromAPI(string parentPath, string name, int userId)
 	{
 		var encodedParentPath = Uri.EscapeDataString(parentPath);
 		var encodedName = Uri.EscapeDataString(name);
-		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}";
+		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}&userId={userId}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 
-	public static async Task CreateFileFromAPI(string parentPath, string name)
+	public static async Task CreateFileFromAPI(string parentPath, string name, int userId)
 	{
 		var encodedParentPath = Uri.EscapeDataString(parentPath);
 		var encodedName = Uri.EscapeDataString(name);
-		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}";
+		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}&userId={userId}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 
-	public static async Task RenameFileFolderFromAPI(string path, string newName)
+	public static async Task RenameFileFolderFromAPI(string path, string newName, int userId)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
 		var encodedNewName = Uri.EscapeDataString(newName);
-		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}";
+		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}&userId={userId}";
 		await CallAPI(HttpMethod.Put, urlSuffix);
 	}
 
-	public static async Task DeleteFileFolderFromAPI(string path)
+	public static async Task DeleteFileFolderFromAPI(string path, int userId)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}";
+		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}&userId={userId}";
 		await CallAPI(HttpMethod.Delete, urlSuffix);
 	}
 
-	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder)
+	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder, int userId)
 	{
-		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}";
+		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}";
 		await CallAPI(HttpMethod.Put, urlSuffix);
 	}
 
-	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder)
+	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder, int userId)
 	{
-		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}";
+		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 	#endregion
