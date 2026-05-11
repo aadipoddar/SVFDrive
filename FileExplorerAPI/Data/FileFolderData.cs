@@ -2,6 +2,7 @@
 using SVFDriveLibrary.Data.Permissions;
 using SVFDriveLibrary.Models.FileExplorer;
 using SVFDriveLibrary.Models.Operations;
+using SVFDriveLibrary.Models.Permissions;
 
 namespace FileExplorerAPI.Data;
 
@@ -80,52 +81,46 @@ public static class FileFolderData
 	internal static async Task<List<FileFolderModel>> LoadFileFoldersFromPath(string path, int userId)
 	{
 		var dir = new DirectoryInfo(path);
-		var folders = dir.GetDirectories();
-		var files = dir.GetFiles();
 
 		List<FileFolderModel> items = [];
-		List<FileFolderModel> permissableItems = [];
 
-		foreach (var d in folders)
+		foreach (var d in dir.GetDirectories())
 			items.Add(ConvertFileFolderInfoToFileFolderModel(folderInfo: d));
 
-		foreach (var f in files)
+		foreach (var f in dir.GetFiles())
 			items.Add(ConvertFileFolderInfoToFileFolderModel(fileInfo: f));
 
 		if (items.Count == 0)
 			return items;
 
-		if (!path.EndsWith(Path.DirectorySeparatorChar) && !path.EndsWith(Path.AltDirectorySeparatorChar))
-			path += Path.DirectorySeparatorChar;
-
-		var rootSlashCount = path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
 		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
+		return FilterByPermissions(items, path, userPermissions);
+	}
 
-		foreach (var permission in userPermissions)
+	private static string NormalizeDirPath(string path) =>
+		Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+	private static List<FileFolderModel> FilterByPermissions(List<FileFolderModel> items, string currentPath, List<UserPermissionModel> permissions)
+	{
+		var current = NormalizeDirPath(currentPath);
+		var allowed = new Dictionary<string, FileFolderModel>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var p in permissions)
 		{
-			if (!permission.Path.EndsWith(Path.DirectorySeparatorChar) && !permission.Path.EndsWith(Path.AltDirectorySeparatorChar))
-				permission.Path += Path.DirectorySeparatorChar;
+			var perm = NormalizeDirPath(p.Path);
 
-			var permissionSlashCount = permission.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
+			// Permission is at or above current folder → user can see everything here
+			if (current.StartsWith(perm, StringComparison.OrdinalIgnoreCase))
+				return items;
 
-			// Below Root Access
-			if (permissionSlashCount < rootSlashCount)
-				if (path.StartsWith(permission.Path, StringComparison.OrdinalIgnoreCase))
-					return items;
-
-			// Root Access
-			if (permissionSlashCount == rootSlashCount)
-				if (string.Equals(permission.Path, path, StringComparison.OrdinalIgnoreCase))
-					return items;
-
-			// Folder in Root & Deep Folder inside Subfolder Access
-			if (permissionSlashCount > rootSlashCount)
+			// Permission is below current folder → expose only the child on the path to it
+			if (perm.StartsWith(current, StringComparison.OrdinalIgnoreCase))
 				foreach (var item in items)
-					if (permission.Path.StartsWith(item.FullName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-						permissableItems.Add(item);
+					if (perm.StartsWith(NormalizeDirPath(item.FullName), StringComparison.OrdinalIgnoreCase))
+						allowed[item.FullName] = item;
 		}
 
-		return permissableItems;
+		return [.. allowed.Values];
 	}
 	#endregion
 
