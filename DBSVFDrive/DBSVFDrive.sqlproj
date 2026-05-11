@@ -85,10 +85,10 @@
     <Build Include="Operations\Settings\Update_Settings.sql" />
     <Build Include="Operations\User\Insert_User.sql" />
     <Build Include="Operations\User\User.sql" />
-    <Build Include="Permissions\Table\UserFolderPermission.sql" />
-    <Build Include="Permissions\Insert\Insert_UserFolderPermission.sql" />
-    <Build Include="Permissions\LoadData\Load_UserFolderPermission_By_UserId.sql" />
-    <Build Include="Permissions\Delete\Delete_UserFolderPermission_By_Id.sql" />
+    <Build Include="Permissions\Table\UserPermission.sql" />
+    <Build Include="Permissions\Insert\Insert_UserPermission.sql" />
+    <Build Include="Permissions\LoadData\Load_UserPermission_By_UserId.sql" />
+    <Build Include="Permissions\Delete\Delete_UserPermission_By_Id.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishLocations\LocalSVFDrive.publish.xml" />

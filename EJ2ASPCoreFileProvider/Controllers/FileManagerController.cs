@@ -21,14 +21,14 @@ public class FileManagerController : Controller
 	// Sets up the user's root folder and write rules. Returns false if the user has no read access.
 	private async Task<bool> SetupForUser(int userId)
 	{
-		var permissions = await UserFolderPermissionData.LoadUserFolderPermissionByUserId(userId);
+		var permissions = await UserPermissionData.LoadUserFolderPermissionByUserId(userId);
 		var perm = permissions.FirstOrDefault();
 
 		if (perm == null || !perm.Read)
 			return false;
 
 		var setting = await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder);
-		var subPath = perm.FolderPath.TrimEnd('/').Replace('/', Path.DirectorySeparatorChar);
+		var subPath = perm.Path.TrimEnd('/').Replace('/', Path.DirectorySeparatorChar);
 		_operation.RootFolder(setting.Value + subPath);
 
 		if (!perm.Write)

@@ -35,12 +35,12 @@ public static class OperationNames
 public static class PermissionsNames
 {
 	#region Permissions
-	public static string InsertUserFolderPermission => "Insert_UserFolderPermission";
+	public static string InsertUserPermission => "Insert_UserPermission";
 
-	public static string DeleteUserFolderPermissionById => "Delete_UserFolderPermission_By_Id";
+	public static string DeleteUserPermissionById => "Delete_UserPermission_By_Id";
 
-	public static string LoadUserFolderPermissionByUserId => "Load_UserFolderPermission_By_UserId";
+	public static string LoadUserPermissionByUserId => "Load_UserPermission_By_UserId";
 
-	public static string UserFolderPermission => "UserFolderPermission";
+	public static string UserPermission => "UserPermission";
 	#endregion
 }

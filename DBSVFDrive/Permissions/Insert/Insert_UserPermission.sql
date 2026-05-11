@@ -1,24 +1,27 @@
-CREATE PROCEDURE [dbo].[Insert_UserFolderPermission]
+CREATE PROCEDURE [dbo].[Insert_UserPermission]
     @Id INT OUTPUT,
 	@UserId INT,
-	@FolderPath VARCHAR(MAX),
+	@Path VARCHAR(MAX),
+	@IsFile BIT,
 	@Read BIT,
 	@Write BIT
 AS
 BEGIN
 	IF @Id = 0
 	BEGIN
-		INSERT INTO [dbo].[UserFolderPermission]
+		INSERT INTO [dbo].[UserPermission]
 		(
 			[UserId],
-			[FolderPath],
+			[Path],
+			[IsFile],
 			[Read],
 			[Write]
 		)
 		VALUES
 		(
 			@UserId,
-			@FolderPath,
+			@Path,
+			@IsFile,
 			@Read,
 			@Write
 		);
@@ -28,10 +31,11 @@ BEGIN
 
 	ELSE
 	BEGIN
-		UPDATE [dbo].[UserFolderPermission]
+		UPDATE [dbo].[UserPermission]
 		SET 
 			[UserId] = @UserId,
-			[FolderPath] = @FolderPath,
+			[Path] = @Path,
+			[IsFile] = @IsFile,
 			[Read] = @Read,
 			[Write] = @Write
 		WHERE

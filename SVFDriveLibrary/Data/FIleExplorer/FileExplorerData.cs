@@ -38,10 +38,10 @@ public static class FileExplorerData
 	#endregion
 
 	#region Lists
-	public static async Task<List<FileFolderModel>> LoadFileFoldersFromAPI(string path)
+	public static async Task<List<FileFolderModel>> LoadFileFoldersFromAPI(string path, int userId)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/LoadFileFolders?path={encodedPath}";
+		var urlSuffix = $"FileFolderManager/LoadFileFolders?path={encodedPath}&userId={userId}";
 		var json = await CallAPI(HttpMethod.Get, urlSuffix);
 		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
 	}

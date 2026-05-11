@@ -16,6 +16,6 @@ public static class PageRouteNames
 	#endregion
 
 	#region Permissions
-	public const string UserFolderPermission = "/operations/user-folder-permission";
+	public const string UserPermission = "/operations/user-permission";
 	#endregion
 }

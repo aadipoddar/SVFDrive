@@ -32,7 +32,7 @@ public class FileFolderManagerController : ControllerBase
 	#region Lists
 	[HttpGet]
 	[Route("LoadFileFolders")]
-	public async Task<IActionResult> LoadFileFolders([FromQuery] string path)
+	public async Task<IActionResult> LoadFileFolders([FromQuery] string path, [FromQuery] int userId)
 	{
 		try
 		{
@@ -41,7 +41,7 @@ public class FileFolderManagerController : ControllerBase
 			if (!Directory.Exists(path))
 				return NotFound($"Folder not found: {path}");
 
-			return Ok(FileFolderData.LoadFileFoldersFromPath(path));
+			return Ok(await FileFolderData.LoadFileFoldersFromPath(path, userId));
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error loading folder: {ex.Message}"); }
 	}

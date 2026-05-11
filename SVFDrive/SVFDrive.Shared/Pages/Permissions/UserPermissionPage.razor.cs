@@ -11,24 +11,24 @@ using Syncfusion.Blazor.Grids;
 
 namespace SVFDrive.Shared.Pages.Permissions;
 
-public partial class UserFolderPermissionPage
+public partial class UserPermissionPage
 {
 	private UserModel _loggedInUser;
 	private bool _isLoading = true;
 	private bool _isProcessing = false;
 
-	private UserFolderPermissionModel _userFolderPermission = new();
+	private UserPermissionModel _userPermission = new();
 	private UserModel _selectedUser;
 
 	private List<UserModel> _users = [];
-	private List<UserFolderPermissionModel> _userFolderPermissions = [];
+	private List<UserPermissionModel> _userPermissions = [];
 	private readonly List<ContextMenuItemModel> _gridContextMenuItems =
 	[
 		new() { Text = "Edit (Insert)", Id = "EditSelectedItem", IconCss = "e-icons e-edit", Target = ".e-content" },
 		new() { Text = "Delete (Del)", Id = "DeleteSelectedItem", IconCss = "e-icons e-trash", Target = ".e-content" }
 	];
 
-	private SfGrid<UserFolderPermissionModel> _sfGrid;
+	private SfGrid<UserPermissionModel> _sfGrid;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
 
 	private int _deleteTransactionId = 0;
@@ -50,7 +50,7 @@ public partial class UserFolderPermissionPage
 	private async Task LoadData()
 	{
 		_users = await CommonData.LoadTableDataByStatus<UserModel>(OperationNames.User);
-		_userFolderPermissions = await CommonData.LoadTableData<UserFolderPermissionModel>(PermissionsNames.UserFolderPermission);
+		_userPermissions = await CommonData.LoadTableData<UserPermissionModel>(PermissionsNames.UserPermission);
 
 		if (_sfGrid is not null)
 			await _sfGrid.Refresh();
@@ -79,8 +79,8 @@ public partial class UserFolderPermissionPage
 
 			await _toastNotification.ShowAsync("Processing", "Please wait while the transaction is being saved...", ToastType.Info);
 
-			_userFolderPermission.UserId = _selectedUser.Id;
-			await UserFolderPermissionData.SaveTransaction(_userFolderPermission, _loggedInUser.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
+			_userPermission.UserId = _selectedUser.Id;
+			await UserPermissionData.SaveTransaction(_userPermission, _loggedInUser.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 
 			await _toastNotification.ShowAsync("Saved", "Transaction has been saved successfully.", ToastType.Success);
 			ResetPage();
@@ -108,7 +108,7 @@ public partial class UserFolderPermissionPage
 			StateHasChanged();
 			await _toastNotification.ShowAsync("Processing", "Generating the Export...", ToastType.Info);
 
-			var (stream, fileName) = await UserFolderPermissionExport.ExportMaster(_userFolderPermissions, ReportExportType.Excel);
+			var (stream, fileName) = await UserPermissionExport.ExportMaster(_userPermissions, ReportExportType.Excel);
 			await SaveAndViewService.SaveAndView(fileName, stream);
 
 			await _toastNotification.ShowAsync("Exported", "The export has been downloaded successfully.", ToastType.Success);
@@ -135,7 +135,7 @@ public partial class UserFolderPermissionPage
 			StateHasChanged();
 			await _toastNotification.ShowAsync("Processing", "Generating the Export...", ToastType.Info);
 
-			var (stream, fileName) = await UserFolderPermissionExport.ExportMaster(_userFolderPermissions, ReportExportType.PDF);
+			var (stream, fileName) = await UserPermissionExport.ExportMaster(_userPermissions, ReportExportType.PDF);
 			await SaveAndViewService.SaveAndView(fileName, stream);
 
 			await _toastNotification.ShowAsync("Exported", "The export has been downloaded successfully.", ToastType.Success);
@@ -163,10 +163,10 @@ public partial class UserFolderPermissionPage
 			if (!_loggedInUser.Admin)
 				throw new Exception("You do not have permission to perform this action.");
 
-			var userFolderPermission = await CommonData.LoadTableDataById<UserFolderPermissionModel>(PermissionsNames.UserFolderPermission, _deleteTransactionId)
+			var userPermission = await CommonData.LoadTableDataById<UserPermissionModel>(PermissionsNames.UserPermission, _deleteTransactionId)
 				?? throw new Exception("Transaction not found.");
 
-			await UserFolderPermissionData.DeleteTransaction(userFolderPermission, _loggedInUser.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
+			await UserPermissionData.DeleteTransaction(userPermission, _loggedInUser.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 
 			await _toastNotification.ShowAsync("Deleted", "Transaction has been deleted successfully.", ToastType.Success);
 			ResetPage();
@@ -210,7 +210,7 @@ public partial class UserFolderPermissionPage
 		}
 	}
 
-	private async Task OnGridContextMenuItemClicked(ContextMenuClickEventArgs<UserFolderPermissionModel> args)
+	private async Task OnGridContextMenuItemClicked(ContextMenuClickEventArgs<UserPermissionModel> args)
 	{
 		switch (args.Item.Id)
 		{
@@ -230,8 +230,8 @@ public partial class UserFolderPermissionPage
 			return;
 
 		_selectedUser = _users.FirstOrDefault(u => u.Id == selectedRecords[0].UserId);
-		_userFolderPermission = await CommonData.LoadTableDataById<UserFolderPermissionModel>(PermissionsNames.UserFolderPermission, selectedRecords[0].Id);
-		if (_userFolderPermission is null)
+		_userPermission = await CommonData.LoadTableDataById<UserPermissionModel>(PermissionsNames.UserPermission, selectedRecords[0].Id);
+		if (_userPermission is null)
 			await _toastNotification.ShowAsync("Error while Editing", "Transaction Not Found.", ToastType.Error);
 
 		await _sfFirstFocus.FocusAsync();
@@ -243,7 +243,7 @@ public partial class UserFolderPermissionPage
 	{
 		var selectedRecords = await _sfGrid.GetSelectedRecordsAsync();
 		if (selectedRecords.Count > 0)
-			await ShowDeleteConfirmation(selectedRecords[0].Id, selectedRecords[0].FolderPath);
+			await ShowDeleteConfirmation(selectedRecords[0].Id, selectedRecords[0].Path);
 	}
 
 	private async Task ShowDeleteConfirmation(int id, string name)
@@ -261,7 +261,7 @@ public partial class UserFolderPermissionPage
 	}
 	
 	private void ResetPage() =>
-		NavigationManager.NavigateTo(PageRouteNames.UserFolderPermission, true);
+		NavigationManager.NavigateTo(PageRouteNames.UserPermission, true);
 
 	private void NavigateBack() =>
 		NavigationManager.NavigateTo(PageRouteNames.OperationsDashboard);

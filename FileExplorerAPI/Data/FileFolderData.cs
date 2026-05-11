@@ -1,4 +1,5 @@
 ﻿using SVFDriveLibrary.Data.Operations;
+using SVFDriveLibrary.Data.Permissions;
 using SVFDriveLibrary.Models.FileExplorer;
 using SVFDriveLibrary.Models.Operations;
 
@@ -34,7 +35,7 @@ public static class FileFolderData
 	internal static FileFolderModel ConvertFileFolderInfoToFileFolderModel(FileInfo fileInfo = null, DirectoryInfo folderInfo = null)
 	{
 		if (fileInfo is not null)
-			return new ()
+			return new()
 			{
 				IsFile = true,
 				Name = fileInfo.Name,
@@ -75,14 +76,15 @@ public static class FileFolderData
 
 		return null;
 	}
-	
-	internal static List<FileFolderModel> LoadFileFoldersFromPath(string path)
+
+	internal static async Task<List<FileFolderModel>> LoadFileFoldersFromPath(string path, int userId)
 	{
 		var dir = new DirectoryInfo(path);
 		var folders = dir.GetDirectories();
 		var files = dir.GetFiles();
 
 		List<FileFolderModel> items = [];
+		List<FileFolderModel> permissableItems = [];
 
 		foreach (var d in folders)
 			items.Add(ConvertFileFolderInfoToFileFolderModel(folderInfo: d));
@@ -90,7 +92,40 @@ public static class FileFolderData
 		foreach (var f in files)
 			items.Add(ConvertFileFolderInfoToFileFolderModel(fileInfo: f));
 
-		return items;
+		if (items.Count == 0)
+			return items;
+
+		if (!path.EndsWith(Path.DirectorySeparatorChar) && !path.EndsWith(Path.AltDirectorySeparatorChar))
+			path += Path.DirectorySeparatorChar;
+
+		var rootSlashCount = path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
+		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
+
+		foreach (var permission in userPermissions)
+		{
+			if (!permission.Path.EndsWith(Path.DirectorySeparatorChar) && !permission.Path.EndsWith(Path.AltDirectorySeparatorChar))
+				permission.Path += Path.DirectorySeparatorChar;
+
+			var permissionSlashCount = permission.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
+
+			// Below Root Access
+			if (permissionSlashCount < rootSlashCount)
+				if (path.StartsWith(permission.Path, StringComparison.OrdinalIgnoreCase))
+					return items;
+
+			// Root Access
+			if (permissionSlashCount == rootSlashCount)
+				if (string.Equals(permission.Path, path, StringComparison.OrdinalIgnoreCase))
+					return items;
+
+			// Folder in Root & Deep Folder inside Subfolder Access
+			if (permissionSlashCount > rootSlashCount)
+				foreach (var item in items)
+					if (permission.Path.StartsWith(item.FullName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+						permissableItems.Add(item);
+		}
+
+		return permissableItems;
 	}
 	#endregion
 

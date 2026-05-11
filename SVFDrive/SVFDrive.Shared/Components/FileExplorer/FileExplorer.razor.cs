@@ -127,7 +127,7 @@ public partial class FileExplorer
 			if (string.IsNullOrWhiteSpace(path))
 				path = _currentPath?.FullName;
 
-			_folderFiles = await FileExplorerData.LoadFileFoldersFromAPI(path);
+			_folderFiles = await FileExplorerData.LoadFileFoldersFromAPI(path, _user.Id);
 			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(path);
 		}
 		catch (Exception ex)
