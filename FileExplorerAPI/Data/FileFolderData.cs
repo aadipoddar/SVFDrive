@@ -40,8 +40,8 @@ public static class FileFolderData
 	{
 		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
-		//if (user.Admin)
-		//	return true;
+		if (user.Admin)
+			return true;
 
 		var perms = await UserPermissionData.LoadUserPermissionByUserId(userId);
 		var target = NormalizeDirPath(path);
@@ -133,8 +133,8 @@ public static class FileFolderData
 	{
 		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
-		//if (user.Admin)
-		//	return items;
+		if (user.Admin)
+			return items;
 
 		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
 
