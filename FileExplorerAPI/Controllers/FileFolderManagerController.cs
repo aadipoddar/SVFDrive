@@ -11,7 +11,7 @@ public class FileFolderManagerController : ControllerBase
 	#region Info
 	[HttpGet]
 	[Route("LoadFileFolderInfo")]
-	public async Task<IActionResult> LoadFileFolderInfo([FromQuery] string path)
+	public async Task<IActionResult> LoadFileFolderInfo([FromQuery] string path, [FromQuery] int userId)
 	{
 		try
 		{
@@ -79,11 +79,15 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPost]
 	[Route("RemoveUploadedFile")]
-	public async Task<IActionResult> RemoveUploadedFile([FromQuery] string parentPath)
+	public async Task<IActionResult> RemoveUploadedFile([FromQuery] string parentPath, [FromQuery] int userId)
 	{
 		try
 		{
 			parentPath = await FileFolderData.ValidateRootPath(parentPath);
+
+			if (!await FileFolderData.ValidateWritePermission(parentPath, userId))
+				return StatusCode(403, "You do not have permission to remove uploads here.");
+
 			var form = await Request.ReadFormAsync(HttpContext.RequestAborted);
 			var name = form.Files.FirstOrDefault()?.FileName ?? form["filename"].FirstOrDefault();
 
@@ -100,7 +104,7 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpGet]
 	[Route("DownloadFile")]
-	public async Task<IActionResult> DownloadFile([FromQuery] string path)
+	public async Task<IActionResult> DownloadFile([FromQuery] string path, [FromQuery] int userId)
 	{
 		try
 		{
@@ -108,6 +112,9 @@ public class FileFolderManagerController : ControllerBase
 
 			if (!System.IO.File.Exists(path))
 				return NotFound($"File not found: {path}");
+
+			if (!await FileFolderData.ValidateReadPermission(path, userId))
+				return StatusCode(403, "You do not have permission to download this file.");
 
 			var fileName = Path.GetFileName(path);
 			return PhysicalFile(path, "application/octet-stream", fileName, enableRangeProcessing: true);
@@ -117,7 +124,7 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpGet]
 	[Route("DownloadFolder")]
-	public async Task<IActionResult> DownloadFolder([FromQuery] string path)
+	public async Task<IActionResult> DownloadFolder([FromQuery] string path, [FromQuery] int userId)
 	{
 		string validatedPath;
 		try
@@ -128,6 +135,9 @@ public class FileFolderManagerController : ControllerBase
 
 		if (!Directory.Exists(validatedPath))
 			return NotFound($"Folder not found: {validatedPath}");
+
+		if (!await FileFolderData.ValidateReadPermission(validatedPath, userId))
+			return StatusCode(403, "You do not have permission to download this folder.");
 
 		// ZipArchiveEntry's internal data-descriptor flush on dispose still calls sync Write.
 		// Async APIs reduce blocking but don't eliminate it — opt in for this endpoint only.
@@ -140,7 +150,7 @@ public class FileFolderManagerController : ControllerBase
 
 		try
 		{
-			await FileFolderData.StreamFolderAsZip(validatedPath, Response.Body, HttpContext.RequestAborted);
+			await FileFolderData.StreamFolderAsZip(validatedPath, userId, Response.Body, HttpContext.RequestAborted);
 		}
 		catch (OperationCanceledException) { }
 

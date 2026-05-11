@@ -36,12 +36,12 @@ public static class FileFolderData
 	private static string NormalizeDirPath(string path) =>
 		Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
-	internal static async Task<bool> ValidateWritePermission(string path, int userId)
+	private static async Task<bool> ValidatePermission(string path, int userId, Func<UserPermissionModel, bool> flag)
 	{
 		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
-		if (user.Admin)
-			return true;
+		//if (user.Admin)
+		//	return true;
 
 		var perms = await UserPermissionData.LoadUserPermissionByUserId(userId);
 		var target = NormalizeDirPath(path);
@@ -52,27 +52,17 @@ public static class FileFolderData
 		if (perms.Any(p => p.Deny && Covers(p)))
 			return false;
 
-		return perms.Any(p => !p.Deny && p.Write && Covers(p));
+		return perms.Any(p => !p.Deny && flag(p) && Covers(p));
 	}
 
-	internal static async Task<bool> ValidateDeletePermission(string path, int userId)
-	{
-		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
-			?? throw new Exception($"User not found: {userId}");
-		if (user.Admin)
-			return true;
+	internal static Task<bool> ValidateReadPermission(string path, int userId) =>
+		ValidatePermission(path, userId, _ => true);
 
-		var perms = await UserPermissionData.LoadUserPermissionByUserId(userId);
-		var target = NormalizeDirPath(path);
+	internal static Task<bool> ValidateWritePermission(string path, int userId) =>
+		ValidatePermission(path, userId, p => p.Write);
 
-		bool Covers(UserPermissionModel p) =>
-			target.StartsWith(NormalizeDirPath(p.Path), StringComparison.OrdinalIgnoreCase);
-
-		if (perms.Any(p => p.Deny && Covers(p)))
-			return false;
-
-		return perms.Any(p => !p.Deny && p.Delete && Covers(p));
-	}
+	internal static Task<bool> ValidateDeletePermission(string path, int userId) =>
+		ValidatePermission(path, userId, p => p.Delete);
 	#endregion
 
 	#region Lists
@@ -143,8 +133,8 @@ public static class FileFolderData
 	{
 		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
 			?? throw new Exception($"User not found: {userId}");
-		if (user.Admin)
-			return items;
+		//if (user.Admin)
+		//	return items;
 
 		var userPermissions = await UserPermissionData.LoadUserPermissionByUserId(userId);
 
@@ -241,8 +231,24 @@ public static class FileFolderData
 		await input.CopyToAsync(fs, cancellationToken);
 	}
 
-	internal static async Task StreamFolderAsZip(string folderPath, Stream output, CancellationToken cancellationToken)
+	internal static async Task StreamFolderAsZip(string folderPath, int userId, Stream output, CancellationToken cancellationToken)
 	{
+		var user = await CommonData.LoadTableDataById<UserModel>(OperationNames.User, userId)
+			?? throw new Exception($"User not found: {userId}");
+
+		var denies = user.Admin
+			? []
+			: (await UserPermissionData.LoadUserPermissionByUserId(userId))
+				.Where(p => p.Deny)
+				.Select(p => NormalizeDirPath(p.Path))
+				.ToList();
+
+		bool IsDenied(string path)
+		{
+			var target = NormalizeDirPath(path);
+			return denies.Any(d => target.StartsWith(d, StringComparison.OrdinalIgnoreCase));
+		}
+
 		await using var archive = await System.IO.Compression.ZipArchive.CreateAsync(
 			output, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true, entryNameEncoding: null, cancellationToken);
 
@@ -250,6 +256,9 @@ public static class FileFolderData
 		foreach (var file in Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories))
 		{
 			cancellationToken.ThrowIfCancellationRequested();
+
+			if (IsDenied(file))
+				continue;
 
 			var entryName = file[rootLength..].Replace('\\', '/');
 			var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.NoCompression);
@@ -305,6 +314,9 @@ public static class FileFolderData
 
 		var sourceParent = Path.GetDirectoryName(source)
 			?? throw new DirectoryNotFoundException("Cannot move: source parent not found.");
+
+		if (!await ValidateReadPermission(source, userId))
+			throw new UnauthorizedAccessException("You do not have permission to move this item.");
 
 		if (!await ValidateDeletePermission(sourceParent, userId))
 			throw new UnauthorizedAccessException("You do not have permission to move from the source folder.");
@@ -388,6 +400,9 @@ public static class FileFolderData
 		var parent = Path.GetDirectoryName(path)
 			?? throw new Exception("Cannot rename: parent folder not found.");
 
+		if (!await ValidateReadPermission(path, userId))
+			throw new UnauthorizedAccessException("You do not have permission to rename this item.");
+
 		if (!await ValidateWritePermission(parent, userId))
 			throw new UnauthorizedAccessException("You do not have permission to rename this item.");
 
@@ -415,6 +430,9 @@ public static class FileFolderData
 
 		var parent = Path.GetDirectoryName(path)
 			?? throw new Exception("Cannot delete: parent folder not found.");
+
+		if (!await ValidateReadPermission(path, userId))
+			throw new UnauthorizedAccessException("You do not have permission to delete this item.");
 
 		if (!await ValidateDeletePermission(parent, userId))
 			throw new UnauthorizedAccessException("You do not have permission to delete this item.");

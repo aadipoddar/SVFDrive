@@ -96,7 +96,7 @@ public partial class FileExplorer
 	private async Task LoadRootFolder()
 	{
 		var rootFolder = (await SettingsData.LoadSettingsByKey(SettingsKeys.MainDriveFolder)).Value;
-		_mainDriveFolder = await FileExplorerData.LoadFileFolderInfoFromAPI(rootFolder);
+		_mainDriveFolder = await FileExplorerData.LoadFileFolderInfoFromAPI(rootFolder, _user.Id);
 		_currentPath = _mainDriveFolder;
 	}
 	#endregion
@@ -109,7 +109,7 @@ public partial class FileExplorer
 			if (string.IsNullOrWhiteSpace(path))
 				path = _currentPath?.FullName;
 
-			return await FileExplorerData.LoadFileFolderInfoFromAPI(path);
+			return await FileExplorerData.LoadFileFolderInfoFromAPI(path, _user.Id);
 		}
 		catch (Exception ex)
 		{
@@ -128,7 +128,7 @@ public partial class FileExplorer
 				path = _currentPath?.FullName;
 
 			_folderFiles = await FileExplorerData.LoadFileFoldersFromAPI(path, _user.Id);
-			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(path);
+			_currentPath = await FileExplorerData.LoadFileFolderInfoFromAPI(path, _user.Id);
 		}
 		catch (Exception ex)
 		{
@@ -234,7 +234,7 @@ public partial class FileExplorer
 			foreach (var item in _sfGrid.SelectedRecords)
 			{
 				if (item is null) continue;
-				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile);
+				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile, _user.Id);
 				await BrowserLauncher.OpenAsync(url);
 			}
 		}
@@ -256,7 +256,7 @@ public partial class FileExplorer
 
 			var encodedParent = Uri.EscapeDataString(_currentPath.FullName);
 			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}&userId={_user.Id}";
-			var removeUrl = $"{apiBase}api/FileFolderManager/RemoveUploadedFile?parentPath={encodedParent}";
+			var removeUrl = $"{apiBase}api/FileFolderManager/RemoveUploadedFile?parentPath={encodedParent}&userId={_user.Id}";
 
 			await _fileUploadDialog.ShowAsync(_currentPath.FullName, saveUrl, removeUrl);
 		}

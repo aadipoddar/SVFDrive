@@ -28,10 +28,10 @@ public static class FileExplorerData
 	#endregion
 
 	#region Info
-	public static async Task<FileFolderModel> LoadFileFolderInfoFromAPI(string path)
+	public static async Task<FileFolderModel> LoadFileFolderInfoFromAPI(string path, int userId)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/LoadFileFolderInfo?path={encodedPath}";
+		var urlSuffix = $"FileFolderManager/LoadFileFolderInfo?path={encodedPath}&userId={userId}";
 		var json = await CallAPI(HttpMethod.Get, urlSuffix);
 		return JsonSerializer.Deserialize<FileFolderModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new FileFolderModel();
 	}
@@ -48,11 +48,11 @@ public static class FileExplorerData
 	#endregion
 
 	#region Download Upload
-	public static async Task<string> GetDownloadUrl(string path, bool isFolder)
+	public static async Task<string> GetDownloadUrl(string path, bool isFolder, int userId)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
 		var endpoint = isFolder ? "DownloadFolder" : "DownloadFile";
-		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}";
+		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}&userId={userId}";
 		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
 			?? throw new Exception("FileManagerApiBase setting is not configured.");
 
