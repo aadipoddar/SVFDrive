@@ -1,0 +1,45 @@
+@using MudBlazor
+<SfDialog @ref="_dialog" Width="480px" IsModal="true" ShowCloseIcon="true" @bind-Visible="_isVisible" CssClass="confirm-dialog properties-dialog">
+
+	<MudBlazor.MudHotkey Key=JsKey.Escape OnHotkeyPressed="HideAsync" />
+
+	<DialogTemplates>
+		<Header>
+			<div class="cd-header">
+				<span>Properties</span>
+			</div>
+		</Header>
+		<Content>
+			@if (Item is not null)
+			{
+				<div class="cd-body">
+					<div class="pd-title">
+						<MudImage Src="@(Item.IsFile ? "_content/SVFDrive.Shared/images/fileicon.png" : "_content/SVFDrive.Shared/images/foldericon.png")" Width="28" Height="28" />
+						<span class="pd-title-text">@Item.Name</span>
+					</div>
+
+					<dl class="pd-grid">
+						<dt>Type</dt><dd>@(Item.IsFile ? "File" : "Folder")</dd>
+						<dt>Location</dt><dd>@Item.ParentFullName</dd>
+						<dt>Full Path</dt><dd>@Item.FullName</dd>
+						@if (Item.IsFile)
+						{
+							<dt>Extension</dt><dd>@Item.Extension</dd>
+							<dt>Size</dt><dd>@Item.LengthDisplay <span class="pd-muted">(@Item.Length.ToString("N0") bytes)</span></dd>
+						}
+						<dt>Attributes</dt><dd>@Item.Attributes</dd>
+						<dt>Read Only</dt><dd>@(Item.IsReadOnly ? "Yes" : "No")</dd>
+
+						<dt class="pd-section">Created</dt><dd class="pd-section">@Item.CreationTime.ToString("dd-MMM-yy hh:mm tt")</dd>
+						<dt>Modified</dt><dd>@Item.LastWriteTime.ToString("dd-MMM-yy hh:mm tt")</dd>
+						<dt>Accessed</dt><dd>@Item.LastAccessTime.ToString("dd-MMM-yy hh:mm tt")</dd>
+					</dl>
+
+					<div class="cd-actions">
+						<button class="cd-btn cd-btn-cancel" @onclick="HideAsync">Close</button>
+					</div>
+				</div>
+			}
+		</Content>
+	</DialogTemplates>
+</SfDialog>

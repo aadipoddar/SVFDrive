@@ -34,3 +34,17 @@ public static class FileFolderHelper
 		return $"{length / (1024.0 * 1024.0 * 1024.0 * 1024.0):F2} TB";
 	}
 }
+
+public enum ClipboardMode
+{
+	None,
+	Cut,
+	Copy
+}
+
+public enum EditDialogMode
+{
+	Rename,
+	NewFolder,
+	NewFile
+}

@@ -1,4 +1,3 @@
-using Microsoft.JSInterop;
 using SVFDrive.Shared.Components.Dialog;
 using SVFDriveLibrary.Data.FileExplorer;
 using SVFDriveLibrary.Data.Operations;
@@ -7,7 +6,7 @@ using SVFDriveLibrary.Models.Operations;
 using Syncfusion.Blazor.Grids;
 using Syncfusion.Blazor.Navigations;
 
-namespace SVFDrive.Shared.Pages;
+namespace SVFDrive.Shared.Components.FileExplorer;
 
 public partial class FileExplorer
 {
@@ -22,21 +21,21 @@ public partial class FileExplorer
 	private FileFolderModel _renameTarget;
 	private EditDialog _editDialog;
 	private EditDialogMode _editDialogMode;
-	private enum EditDialogMode { Rename, NewFolder, NewFile }
 
 	private List<string> _clipboardPaths = [];
 	private ClipboardMode _clipboardMode = ClipboardMode.None;
-	private enum ClipboardMode { None, Cut, Copy }
 
 	private string _deleteItemName = string.Empty;
 	private DeleteConfirmationDialog _deleteConfirmationDialog;
 
 	private FileUploadDialog _fileUploadDialog;
 
+	private PropertiesDialog _propertiesDialog;
+
 	private SfGrid<FileFolderModel> _sfGrid;
 	private ToastNotification _toastNotification;
 
-	private List<object> ToolbarItems = [
+	private readonly List<object> ToolbarItems = [
 		new ItemModel() { Id = "GoBack", TooltipText = "Go back", PrefixIcon = "e-arrow-left" },
 		new ItemModel() { Id = "Home", TooltipText = "Home", PrefixIcon = "e-home" },
 		new ItemModel() { Id = "Refresh", TooltipText = "Refresh", PrefixIcon = "e-refresh" },
@@ -54,6 +53,7 @@ public partial class FileExplorer
 		new ItemModel() { Id = "DownloadItem", TooltipText = "Download", PrefixIcon = "e-download", Align = ItemAlign.Right},
 		new ItemModel() { Id = "RenameItem", TooltipText = "Rename (F2)", PrefixIcon = "e-rename", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DeleteItem", TooltipText = "Delete (Del)", PrefixIcon = "e-delete", Align = ItemAlign.Right},
+		new ItemModel() { Id = "PropertiesItem", TooltipText = "Properties", PrefixIcon = "e-circle-info", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator, Align = ItemAlign.Right},
 		"Search"
 	];
@@ -69,7 +69,9 @@ public partial class FileExplorer
 		new() { Text = "Upload Files", Id = "UploadItem", IconCss = "e-icons e-upload-1", Target = ".e-content" },
 		new() { Text = "Download", Id = "DownloadItem", IconCss = "e-icons e-download", Target = ".e-content" },
 		new() { Text = "Rename (F2)", Id = "RenameItem", IconCss = "e-icons e-rename", Target = ".e-content" },
-		new() { Text = "Delete (Del)", Id = "DeleteItem", IconCss = "e-icons e-trash", Target = ".e-content" }
+		new() { Text = "Delete (Del)", Id = "DeleteItem", IconCss = "e-icons e-trash", Target = ".e-content" },
+		new() { Separator = true },
+		new() { Text = "Properties", Id = "PropertiesItem", IconCss = "e-icons e-circle-info", Target = ".e-content" }
 	];
 
 	#region Load Data
@@ -139,7 +141,7 @@ public partial class FileExplorer
 	}
 	#endregion
 
-	#region Rename / New
+	#region Rename New
 	private async Task HandleEditDialogConfirm(string value)
 	{
 		try
@@ -406,6 +408,7 @@ public partial class FileExplorer
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
+			case "PropertiesItem": await ShowProperties(); break;
 		}
 	}
 
@@ -422,7 +425,27 @@ public partial class FileExplorer
 			case "DownloadItem": await DownloadSelected(); break;
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
+			case "PropertiesItem": await ShowProperties(); break;
 		}
+	}
+
+	private async Task ShowProperties()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected.", ToastType.Error);
+			return;
+		}
+
+		if (_sfGrid.SelectedRecords.Count > 1)
+		{
+			await _toastNotification.ShowAsync("Error", "Select only one item to view properties.", ToastType.Error);
+			return;
+		}
+
+		var info = await LoadFileFolderInfoFromAPI(_sfGrid.SelectedRecords[0].FullName);
+		if (info is not null)
+			await _propertiesDialog.ShowAsync(info);
 	}
 
 	public async Task RecordDoubleClickHandler(RecordDoubleClickEventArgs<FileFolderModel> args)

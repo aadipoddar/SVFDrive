@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using Syncfusion.Blazor.Inputs;
 using Syncfusion.Blazor.Popups;
 
-namespace SVFDrive.Shared.Components.Dialog;
+namespace SVFDrive.Shared.Components.FileExplorer;
 
 public partial class FileUploadDialog
 {

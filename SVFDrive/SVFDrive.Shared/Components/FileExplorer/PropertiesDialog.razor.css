@@ -1,0 +1,46 @@
+.properties-dialog .pd-title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.properties-dialog .pd-title-text {
+	font-size: 14px;
+	font-weight: 600;
+	color: #0f172a;
+	word-break: break-all;
+}
+
+.properties-dialog .pd-grid {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	row-gap: 8px;
+	column-gap: 16px;
+	margin: 0;
+	font-size: 12px;
+}
+
+	.properties-dialog .pd-grid dt {
+		color: #64748b;
+		font-weight: 500;
+	}
+
+	.properties-dialog .pd-grid dd {
+		margin: 0;
+		color: #0f172a;
+		font-weight: 500;
+		word-break: break-all;
+	}
+
+	.properties-dialog .pd-grid .pd-section {
+		margin-top: 6px;
+		padding-top: 10px;
+		border-top: 1px solid #e2e8f0;
+	}
+
+.properties-dialog .pd-muted {
+	color: #64748b;
+	font-weight: 400;
+}

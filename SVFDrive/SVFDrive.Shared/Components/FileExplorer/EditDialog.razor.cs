@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Syncfusion.Blazor.Popups;
 
-namespace SVFDrive.Shared.Components.Dialog;
+namespace SVFDrive.Shared.Components.FileExplorer;
 
 public partial class EditDialog
 {
