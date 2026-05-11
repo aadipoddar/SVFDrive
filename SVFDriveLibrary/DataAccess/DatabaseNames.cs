@@ -30,6 +30,10 @@ public static class OperationNames
 	public static string AuditTrail => "AuditTrail";
 	public static string InsertAuditTrail => "Insert_AuditTrail";
 	#endregion
+
+	#region File Explorer
+	public static string FileFolder => "FileFolder";
+	#endregion
 }
 
 public static class PermissionsNames

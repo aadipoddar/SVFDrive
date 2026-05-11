@@ -1,6 +1,9 @@
 ﻿using FileExplorerAPI.Data;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using SVFDriveLibrary.Data.Operations;
+using SVFDriveLibrary.DataAccess;
+using SVFDriveLibrary.Models.Operations;
 
 namespace FileExplorerAPI.Controllers;
 
@@ -52,7 +55,7 @@ public class FileFolderManagerController : ControllerBase
 	[Route("UploadFile")]
 	[DisableRequestSizeLimit]
 	[RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
-	public async Task<IActionResult> UploadFile([FromQuery] string parentPath, [FromQuery] int userId)
+	public async Task<IActionResult> UploadFile([FromQuery] string parentPath, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
@@ -71,6 +74,18 @@ public class FileFolderManagerController : ControllerBase
 
 			await using var stream = file.OpenReadStream();
 			await FileFolderData.AppendChunkToFile(parentPath, file.FileName, chunkIndex, totalChunks, stream, HttpContext.RequestAborted);
+
+			// Audit once, on the final chunk
+			if (chunkIndex + 1 >= totalChunks)
+				await AuditTrailData.SaveAuditTrail(new()
+				{
+					Action = AuditTrailActionTypes.Upload.ToString(),
+					TableName = OperationNames.FileFolder,
+					RecordNo = file.FileName,
+					RecordValue = Path.Combine(parentPath, file.FileName),
+					CreatedBy = userId,
+					CreatedFromPlatform = platform
+				});
 
 			return Ok();
 		}
@@ -104,7 +119,7 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpGet]
 	[Route("DownloadFile")]
-	public async Task<IActionResult> DownloadFile([FromQuery] string path, [FromQuery] int userId)
+	public async Task<IActionResult> DownloadFile([FromQuery] string path, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
@@ -117,6 +132,19 @@ public class FileFolderManagerController : ControllerBase
 				return StatusCode(403, "You do not have permission to download this file.");
 
 			var fileName = Path.GetFileName(path);
+
+			// Audit only on the initial request — range-continuation requests skip
+			if (string.IsNullOrEmpty(Request.Headers.Range.ToString()))
+				await AuditTrailData.SaveAuditTrail(new()
+				{
+					Action = AuditTrailActionTypes.Download.ToString(),
+					TableName = OperationNames.FileFolder,
+					RecordNo = fileName,
+					RecordValue = path,
+					CreatedBy = userId,
+					CreatedFromPlatform = platform
+				});
+
 			return PhysicalFile(path, "application/octet-stream", fileName, enableRangeProcessing: true);
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error downloading file: {ex.Message}"); }
@@ -124,7 +152,7 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpGet]
 	[Route("DownloadFolder")]
-	public async Task<IActionResult> DownloadFolder([FromQuery] string path, [FromQuery] int userId)
+	public async Task<IActionResult> DownloadFolder([FromQuery] string path, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		string validatedPath;
 		try
@@ -145,6 +173,17 @@ public class FileFolderManagerController : ControllerBase
 		bodyControl?.AllowSynchronousIO = true;
 
 		var folderName = new DirectoryInfo(validatedPath).Name;
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Download.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = $"{folderName}.zip",
+			RecordValue = validatedPath,
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
+
 		Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{folderName}.zip\"");
 		Response.ContentType = "application/zip";
 
@@ -161,11 +200,11 @@ public class FileFolderManagerController : ControllerBase
 	#region Actions
 	[HttpPost]
 	[Route("CreateFolder")]
-	public async Task<IActionResult> CreateFolder([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId)
+	public async Task<IActionResult> CreateFolder([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await FileFolderData.CreateFolder(parentPath, name, userId);
+			await FileFolderData.CreateFolder(parentPath, name, userId, platform);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error creating folder: {ex.Message}"); }
@@ -173,11 +212,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPost]
 	[Route("CreateFile")]
-	public async Task<IActionResult> CreateFile([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId)
+	public async Task<IActionResult> CreateFile([FromQuery] string parentPath, [FromQuery] string name, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await FileFolderData.CreateFile(parentPath, name, userId);
+			await FileFolderData.CreateFile(parentPath, name, userId, platform);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error creating file: {ex.Message}"); }
@@ -185,11 +224,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPut]
 	[Route("MoveFileFolder")]
-	public async Task<IActionResult> MoveFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId)
+	public async Task<IActionResult> MoveFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await Task.Run(async () => await FileFolderData.MoveFileFolder(source, destinationFolder, userId), HttpContext.RequestAborted);
+			await Task.Run(async () => await FileFolderData.MoveFileFolder(source, destinationFolder, userId, platform), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error moving: {ex.Message}"); }
@@ -197,11 +236,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPost]
 	[Route("CopyFileFolder")]
-	public async Task<IActionResult> CopyFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId)
+	public async Task<IActionResult> CopyFileFolder([FromQuery] string source, [FromQuery] string destinationFolder, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await Task.Run(async () => await FileFolderData.CopyFileFolder(source, destinationFolder, userId), HttpContext.RequestAborted);
+			await Task.Run(async () => await FileFolderData.CopyFileFolder(source, destinationFolder, userId, platform), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error copying: {ex.Message}"); }
@@ -209,11 +248,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpPut]
 	[Route("RenameFileFolder")]
-	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName, [FromQuery] int userId)
+	public async Task<IActionResult> RenameFileFolder([FromQuery] string path, [FromQuery] string newName, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await FileFolderData.RenameFileFolder(path, newName, userId);
+			await FileFolderData.RenameFileFolder(path, newName, userId, platform);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error renaming path: {ex.Message}"); }
@@ -221,11 +260,11 @@ public class FileFolderManagerController : ControllerBase
 
 	[HttpDelete]
 	[Route("DeleteFileFolder")]
-	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path, [FromQuery] int userId)
+	public async Task<IActionResult> DeleteFileFolder([FromQuery] string path, [FromQuery] int userId, [FromQuery] string platform)
 	{
 		try
 		{
-			await Task.Run(async () => await FileFolderData.DeleteFileFolder(path, userId), HttpContext.RequestAborted);
+			await Task.Run(async () => await FileFolderData.DeleteFileFolder(path, userId, platform), HttpContext.RequestAborted);
 			return NoContent();
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error deleting path: {ex.Message}"); }

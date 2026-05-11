@@ -151,18 +151,18 @@ public partial class FileExplorer
 			switch (_editDialogMode)
 			{
 				case EditDialogMode.NewFolder:
-					await FileExplorerData.CreateFolderFromAPI(_currentPath.FullName, value, _user.Id);
+					await FileExplorerData.CreateFolderFromAPI(_currentPath.FullName, value, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 					await _toastNotification.ShowAsync("Created", $"Folder '{value}' created.", ToastType.Success);
 					break;
 
 				case EditDialogMode.NewFile:
-					await FileExplorerData.CreateFileFromAPI(_currentPath.FullName, value, _user.Id);
+					await FileExplorerData.CreateFileFromAPI(_currentPath.FullName, value, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 					await _toastNotification.ShowAsync("Created", $"File '{value}' created.", ToastType.Success);
 					break;
 
 				case EditDialogMode.Rename:
 					if (_renameTarget is null) return;
-					await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, value, _user.Id);
+					await FileExplorerData.RenameFileFolderFromAPI(_renameTarget.FullName, value, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 					await _toastNotification.ShowAsync("Renamed", $"Renamed to '{value}' successfully.", ToastType.Success);
 					break;
 			}
@@ -234,7 +234,7 @@ public partial class FileExplorer
 			foreach (var item in _sfGrid.SelectedRecords)
 			{
 				if (item is null) continue;
-				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile, _user.Id);
+				var url = await FileExplorerData.GetDownloadUrl(item.FullName, isFolder: !item.IsFile, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 				await BrowserLauncher.OpenAsync(url);
 			}
 		}
@@ -255,7 +255,8 @@ public partial class FileExplorer
 				?? throw new Exception("FileManagerApiBase not configured.");
 
 			var encodedParent = Uri.EscapeDataString(_currentPath.FullName);
-			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}&userId={_user.Id}";
+			var encodedPlatform = Uri.EscapeDataString(FormFactor.GetFormFactor() + FormFactor.GetPlatform());
+			var saveUrl = $"{apiBase}api/FileFolderManager/UploadFile?parentPath={encodedParent}&userId={_user.Id}&platform={encodedPlatform}";
 			var removeUrl = $"{apiBase}api/FileFolderManager/RemoveUploadedFile?parentPath={encodedParent}&userId={_user.Id}";
 
 			await _fileUploadDialog.ShowAsync(_currentPath.FullName, saveUrl, removeUrl);
@@ -317,9 +318,9 @@ public partial class FileExplorer
 				try
 				{
 					if (mode == ClipboardMode.Cut)
-						await FileExplorerData.MoveFileFolderFromAPI(path, _currentPath.FullName, _user.Id);
+						await FileExplorerData.MoveFileFolderFromAPI(path, _currentPath.FullName, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 					else
-						await FileExplorerData.CopyFileFolderFromAPI(path, _currentPath.FullName, _user.Id);
+						await FileExplorerData.CopyFileFolderFromAPI(path, _currentPath.FullName, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 
 					succeeded++;
 				}
@@ -356,7 +357,7 @@ public partial class FileExplorer
 
 			foreach (var selected in _sfGrid.SelectedRecords)
 				if (selected is not null)
-					await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName, _user.Id);
+					await FileExplorerData.DeleteFileFolderFromAPI(selected.FullName, _user.Id, FormFactor.GetFormFactor() + FormFactor.GetPlatform());
 		}
 		catch (Exception ex)
 		{

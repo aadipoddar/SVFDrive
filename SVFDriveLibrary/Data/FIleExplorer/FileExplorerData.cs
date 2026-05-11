@@ -48,11 +48,12 @@ public static class FileExplorerData
 	#endregion
 
 	#region Download Upload
-	public static async Task<string> GetDownloadUrl(string path, bool isFolder, int userId)
+	public static async Task<string> GetDownloadUrl(string path, bool isFolder, int userId, string platform)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
+		var encodedPlatform = Uri.EscapeDataString(platform);
 		var endpoint = isFolder ? "DownloadFolder" : "DownloadFile";
-		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}&userId={userId}";
+		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
 		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
 			?? throw new Exception("FileManagerApiBase setting is not configured.");
 
@@ -61,46 +62,52 @@ public static class FileExplorerData
 	#endregion
 
 	#region Actions
-	public static async Task CreateFolderFromAPI(string parentPath, string name, int userId)
+	public static async Task CreateFolderFromAPI(string parentPath, string name, int userId, string platform)
 	{
 		var encodedParentPath = Uri.EscapeDataString(parentPath);
 		var encodedName = Uri.EscapeDataString(name);
-		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 
-	public static async Task CreateFileFromAPI(string parentPath, string name, int userId)
+	public static async Task CreateFileFromAPI(string parentPath, string name, int userId, string platform)
 	{
 		var encodedParentPath = Uri.EscapeDataString(parentPath);
 		var encodedName = Uri.EscapeDataString(name);
-		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 
-	public static async Task RenameFileFolderFromAPI(string path, string newName, int userId)
+	public static async Task RenameFileFolderFromAPI(string path, string newName, int userId, string platform)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
 		var encodedNewName = Uri.EscapeDataString(newName);
-		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Put, urlSuffix);
 	}
 
-	public static async Task DeleteFileFolderFromAPI(string path, int userId)
+	public static async Task DeleteFileFolderFromAPI(string path, int userId, string platform)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
-		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Delete, urlSuffix);
 	}
 
-	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder, int userId)
+	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
 	{
-		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Put, urlSuffix);
 	}
 
-	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder, int userId)
+	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
 	{
-		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}";
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}&platform={encodedPlatform}";
 		await CallAPI(HttpMethod.Post, urlSuffix);
 	}
 	#endregion

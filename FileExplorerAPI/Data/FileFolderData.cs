@@ -271,7 +271,7 @@ public static class FileFolderData
 	#endregion
 
 	#region Actions
-	internal static async Task CreateFolder(string parentPath, string name, int userId)
+	internal static async Task CreateFolder(string parentPath, string name, int userId, string platform)
 	{
 		ValidateName(name);
 		parentPath = await ValidateRootPath(parentPath);
@@ -287,9 +287,19 @@ public static class FileFolderData
 			throw new IOException($"An item named '{name}' already exists.");
 
 		Directory.CreateDirectory(destination);
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Insert.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = name,
+			RecordValue = destination,
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 
-	internal static async Task CreateFile(string parentPath, string name, int userId)
+	internal static async Task CreateFile(string parentPath, string name, int userId, string platform)
 	{
 		ValidateName(name);
 		parentPath = await ValidateRootPath(parentPath);
@@ -305,9 +315,19 @@ public static class FileFolderData
 			throw new IOException($"An item named '{name}' already exists.");
 
 		using (File.Create(destination)) { }
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Insert.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = name,
+			RecordValue = destination,
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 
-	internal static async Task MoveFileFolder(string source, string destinationFolder, int userId)
+	internal static async Task MoveFileFolder(string source, string destinationFolder, int userId, string platform)
 	{
 		source = await ValidateRootPath(source);
 		destinationFolder = await ValidateRootPath(destinationFolder);
@@ -344,9 +364,19 @@ public static class FileFolderData
 
 		else
 			throw new FileNotFoundException($"Source not found: {source}");
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Update.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = name,
+			RecordValue = $"{source} → {destination}",
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 
-	internal static async Task CopyFileFolder(string source, string destinationFolder, int userId)
+	internal static async Task CopyFileFolder(string source, string destinationFolder, int userId, string platform)
 	{
 		source = await ValidateRootPath(source);
 		destinationFolder = await ValidateRootPath(destinationFolder);
@@ -376,6 +406,16 @@ public static class FileFolderData
 
 		else
 			throw new FileNotFoundException($"Source not found: {source}");
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Insert.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = name,
+			RecordValue = $"{source} → {destination}",
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 
 	private static void CopyDirectoryRecursive(string source, string destination)
@@ -389,7 +429,7 @@ public static class FileFolderData
 			CopyDirectoryRecursive(dir, Path.Combine(destination, Path.GetFileName(dir)));
 	}
 
-	internal static async Task RenameFileFolder(string path, string newName, int userId)
+	internal static async Task RenameFileFolder(string path, string newName, int userId, string platform)
 	{
 		ValidateName(newName);
 		path = await ValidateRootPath(path);
@@ -411,6 +451,8 @@ public static class FileFolderData
 		if (File.Exists(destination) || Directory.Exists(destination))
 			throw new IOException($"An item named '{newName}' already exists.");
 
+		var originalName = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
 		if (Directory.Exists(path))
 			Directory.Move(path, destination);
 
@@ -419,9 +461,19 @@ public static class FileFolderData
 
 		else
 			throw new FileNotFoundException($"Path not found: {path}");
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Update.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = newName,
+			RecordValue = $"{originalName} → {newName} ({destination})",
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 
-	internal static async Task DeleteFileFolder(string path, int userId)
+	internal static async Task DeleteFileFolder(string path, int userId, string platform)
 	{
 		path = await ValidateRootPath(path);
 
@@ -437,11 +489,23 @@ public static class FileFolderData
 		if (!await ValidateDeletePermission(parent, userId))
 			throw new UnauthorizedAccessException("You do not have permission to delete this item.");
 
+		var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
 		if (Directory.Exists(path))
 			Directory.Delete(path, recursive: true);
 
 		else if (File.Exists(path))
 			File.Delete(path);
+
+		await AuditTrailData.SaveAuditTrail(new()
+		{
+			Action = AuditTrailActionTypes.Delete.ToString(),
+			TableName = OperationNames.FileFolder,
+			RecordNo = name,
+			RecordValue = path,
+			CreatedBy = userId,
+			CreatedFromPlatform = platform
+		});
 	}
 	#endregion
 }

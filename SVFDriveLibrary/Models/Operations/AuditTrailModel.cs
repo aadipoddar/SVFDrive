@@ -18,5 +18,7 @@ public enum AuditTrailActionTypes
     Insert,
     Update,
 	Delete,
-    Recover
+    Recover,
+    Upload,
+    Download
 }
