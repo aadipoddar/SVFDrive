@@ -1,3 +1,4 @@
+using Microsoft.JSInterop;
 using SVFDrive.Shared.Components.Dialog;
 using SVFDriveLibrary.Data.FileExplorer;
 using SVFDriveLibrary.Data.Operations;
@@ -48,6 +49,7 @@ public partial class FileExplorer
 		new ItemModel() { Id = "CutItem", TooltipText = "Cut (Ctrl + X)", PrefixIcon = "e-cut", Align = ItemAlign.Right},
 		new ItemModel() { Id = "CopyItem", TooltipText = "Copy (Ctrl + C)", PrefixIcon = "e-copy", Align = ItemAlign.Right},
 		new ItemModel() { Id = "PasteItem", TooltipText = "Paste (Ctrl + V)", PrefixIcon = "e-paste", Align = ItemAlign.Right},
+		new ItemModel() { Id = "CopyPathItem", TooltipText = "Copy as Path", PrefixIcon = "e-link", Align = ItemAlign.Right},
 		new ItemModel() { Type = ItemType.Separator,Align = ItemAlign.Right},
 		new ItemModel() { Id = "UploadItem", TooltipText = "Upload Files", PrefixIcon = "e-upload-1", Align = ItemAlign.Right},
 		new ItemModel() { Id = "DownloadItem", TooltipText = "Download", PrefixIcon = "e-download", Align = ItemAlign.Right},
@@ -65,6 +67,7 @@ public partial class FileExplorer
 		new() { Text = "Cut (Ctrl + X)", Id = "CutItem", IconCss = "e-icons e-cut", Target = ".e-content" },
 		new() { Text = "Copy (Ctrl + C)", Id = "CopyItem", IconCss = "e-icons e-copy", Target = ".e-content" },
 		new() { Text = "Paste (Ctrl + V)", Id = "PasteItem", IconCss = "e-icons e-paste", Target = ".e-content" },
+		new() { Text = "Copy as Path", Id = "CopyPathItem", IconCss = "e-icons e-link", Target = ".e-content" },
 		new() { Separator = true },
 		new() { Text = "Upload Files", Id = "UploadItem", IconCss = "e-icons e-upload-1", Target = ".e-content" },
 		new() { Text = "Download", Id = "DownloadItem", IconCss = "e-icons e-download", Target = ".e-content" },
@@ -116,6 +119,19 @@ public partial class FileExplorer
 			await _toastNotification.ShowAsync("Error", $"Failed to get file info: {ex.Message}", ToastType.Error);
 			return null;
 		}
+	}
+
+	private async Task CopyPathToClipboard()
+	{
+		if (_sfGrid is null || _sfGrid.SelectedRecords.Count == 0)
+		{
+			await _toastNotification.ShowAsync("Error", "No item selected.", ToastType.Error);
+			return;
+		}
+
+		var paths = string.Join(Environment.NewLine, _sfGrid.SelectedRecords.Where(r => r is not null).Select(r => r.FullName));
+		await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", paths);
+		await _toastNotification.ShowAsync("Copied", "Path copied to clipboard.", ToastType.Success);
 	}
 	#endregion
 
@@ -410,6 +426,7 @@ public partial class FileExplorer
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
 			case "PropertiesItem": await ShowProperties(); break;
+		case "CopyPathItem": await CopyPathToClipboard(); break;
 		}
 	}
 
@@ -427,6 +444,7 @@ public partial class FileExplorer
 			case "RenameItem": await ShowRenameDialog(); break;
 			case "DeleteItem": await ShowDeleteConfirmation(); break;
 			case "PropertiesItem": await ShowProperties(); break;
+			case "CopyPathItem": await CopyPathToClipboard(); break;
 		}
 	}
 
