@@ -18,6 +18,9 @@ public static partial class Secrets
 	public static string ToEmail = GetSecret(nameof(ToEmail));
 	public static string ToName => "SVF Drive";
 
+	public static string RelayUrl = GetSecret(nameof(RelayUrl));
+	public static string RelayServerId => "MAIN";
+
 	public static string OnlineFullLogoPath => "https://raw.githubusercontent.com/aadipoddar/SVFDrive/refs/heads/main/SVFDrive/SVFDrive.Web/wwwroot/images/logo.png";
 	public static string AppWebsite => "https://svfdrive.azurewebsites.net";
 	public static string CompanyWebsite => "https://svf.in/";

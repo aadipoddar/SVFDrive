@@ -1,3 +1,4 @@
+using FileExplorerAPI.Services;
 using SVFDriveLibrary.DataAccess;
 
 SqlDataAccess.SetupConfiguration();
@@ -15,6 +16,7 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddHostedService<RelayConnectionService>();
 
 var app = builder.Build();
 

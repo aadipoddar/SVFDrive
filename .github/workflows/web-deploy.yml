@@ -49,6 +49,8 @@ jobs:
 
                   EmailPassword = "${{ secrets.EmailPassword }}";
                   ToEmail = "${{ secrets.ToEmail }}";
+
+                  RelayUrl = "${{ secrets.RelayUrl }}";
               }
           }
           "@
