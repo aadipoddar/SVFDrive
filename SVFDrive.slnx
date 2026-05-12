@@ -11,5 +11,4 @@
     <Deploy />
   </Project>
   <Project Path="SVFDriveLibrary/SVFDriveLibrary.csproj" />
-  <Project Path="SVFDriveRelay/SVFDriveRelay.csproj" Id="57852f0c-ba36-44d7-b030-515ad05dbbd5" />
 </Solution>

@@ -15,12 +15,12 @@ namespace EJ2APIServices.Controllers
 
     [Route("api/[controller]")]
     [EnableCors("AllowAllOrigins")]
-    public class FileManagerController : Controller
+    public class FileManagerAccessController : Controller
     {
         public PhysicalFileProvider operation;
         public string basePath;
         string root = Path.Combine("wwwroot","Files");
-        public FileManagerController(IWebHostEnvironment hostingEnvironment)
+        public FileManagerAccessController(IWebHostEnvironment hostingEnvironment)
         {
             this.basePath = hostingEnvironment.ContentRootPath;
             this.operation = new PhysicalFileProvider();
@@ -30,6 +30,7 @@ namespace EJ2APIServices.Controllers
         [Route("FileOperations")]
         public object FileOperations([FromBody] FileManagerDirectoryContent args)
         {
+            this.operation.SetRules(GetRules());
             if (args.Action == "delete" || args.Action == "rename")
             {
                 if ((args.TargetPath == null) && (args.Path == ""))
@@ -71,7 +72,6 @@ namespace EJ2APIServices.Controllers
 
         // uploads the file(s) into a specified path
         [Route("Upload")]
-        [DisableRequestSizeLimit]
         public IActionResult Upload(string path, long size, IList<IFormFile> uploadFiles, string action)
         {
             try
@@ -138,8 +138,24 @@ namespace EJ2APIServices.Controllers
         [Route("GetImage")]
         public IActionResult GetImage(FileManagerDirectoryContent args)
         {
-            return this.operation.GetImage(args.Path, args.Id,false,null, null);
-        }       
+            return this.operation.GetImage(args.Path, args.Id, false, null, null);
+        }
+
+        public AccessDetails GetRules()
+        {
+            AccessDetails accessDetails = new AccessDetails();
+            List<AccessRule> Rules = new List<AccessRule> {
+                //Deny writing for particular folder
+                new AccessRule { Path = "/Documents", Role = "Document Manager", Read = Permission.Allow, Write = Permission.Deny, Copy = Permission.Allow, WriteContents = Permission.Deny, Upload = Permission.Deny, Download = Permission.Deny, IsFile = false },
+                // Deny writing for particular file
+                new AccessRule { Path = "/Pictures/Employees/Adam.png", Role = "Document Manager", Read = Permission.Allow, Write = Permission.Deny, Copy = Permission.Deny, Download = Permission.Deny, IsFile = true },
+                // Deny based on the type
+                new AccessRule { Path = "/Music", Role = "Document Manager", Read = Permission.Allow, Write = Permission.Deny, Copy = Permission.Allow, WriteContents = Permission.Deny, Upload = Permission.Allow, Download = Permission.Deny, UploadContentFilter = UploadContentFilter.FilesOnly, IsFile = false },
+            };
+            accessDetails.AccessRules = Rules;
+            accessDetails.Role = "Document Manager";
+            return accessDetails;
+        }
     }
 
 }

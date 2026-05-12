@@ -1,10 +1,14 @@
-﻿#if EJ2_DNX
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+#if EJ2_DNX
 using System.Web;
 #else
+using Microsoft.AspNetCore.Http;
 #endif
 
-namespace Syncfusion.EJ2.FileManager.Base;
-
+namespace Syncfusion.EJ2.FileManager.Base
+{
     public class FileManagerParams
     {
         public string Name { get; set; }
@@ -26,3 +30,4 @@ namespace Syncfusion.EJ2.FileManager.Base;
 #endif
         public string[] ReplacedItemNames { get; set; }
     }
+}

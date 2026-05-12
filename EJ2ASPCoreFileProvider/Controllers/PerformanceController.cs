@@ -1,12 +1,19 @@
 ﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.FileManager.Base;
 using Syncfusion.EJ2.FileManager.PhysicalFileProvider;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace EJ2APIServices.Controllers;
-
+namespace EJ2APIServices.Controllers
+{
     [Route("api/[controller]")]
     [EnableCors("AllowAllOrigins")]
     public class PerformanceController : Controller
@@ -15,9 +22,12 @@ namespace EJ2APIServices.Controllers;
         private readonly string _basePath;
         private readonly string _perfRootRelative = "wwwroot\\Files\\Perf";
 
-	public PerformanceController(IWebHostEnvironment env) => _basePath = env.ContentRootPath;
+        public PerformanceController(IWebHostEnvironment env)
+        {
+            _basePath = env.ContentRootPath;
+        }
 
-	private string GetPerfRoot(string root)
+        private string GetPerfRoot(string root)
         {
             var safeRoot = string.IsNullOrWhiteSpace(root) ? "" : root.Trim();
             if (safeRoot.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
@@ -116,11 +126,9 @@ namespace EJ2APIServices.Controllers;
             {
                 if ((args.TargetPath == null) && (args.Path == ""))
                 {
-				FileManagerResponse response = new()
-				{
-					Error = new ErrorDetails { Code = "401", Message = "Restricted to modify the root folder." }
-				};
-				return operation.ToCamelCase(response);
+                    FileManagerResponse response = new FileManagerResponse();
+                    response.Error = new ErrorDetails { Code = "401", Message = "Restricted to modify the root folder." };
+                    return operation.ToCamelCase(response);
                 }
             }
 
@@ -164,8 +172,8 @@ namespace EJ2APIServices.Controllers;
             }
             catch (Exception)
             {
-                ErrorDetails er = new()
-			{
+                ErrorDetails er = new ErrorDetails
+                {
                     Message = "Access denied for Directory-traversal",
                     Code = "417"
                 };
@@ -194,3 +202,4 @@ namespace EJ2APIServices.Controllers;
             return operation.GetImage(args.Path, args.Id, false, null, null);
         }
     }
+}

@@ -37,9 +37,6 @@ jobs:
     - name: Build FileExplorerAPI
       run: dotnet build FileExplorerAPI/FileExplorerAPI.csproj --no-restore --configuration Release
 
-    - name: Build SVFDriveRelay
-      run: dotnet build SVFDriveRelay/SVFDriveRelay.csproj --no-restore --configuration Release
-
     - name: Build EJ2ASPCoreFileProvider
       run: dotnet build EJ2ASPCoreFileProvider/EJ2ASPCoreFileProvider.csproj --no-restore --configuration Release
     

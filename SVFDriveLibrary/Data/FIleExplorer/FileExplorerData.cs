@@ -7,35 +7,47 @@ namespace SVFDriveLibrary.Data.FileExplorer;
 
 public static class FileExplorerData
 {
-	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+	#region API Calls
+	private static async Task<string> CallAPI(HttpMethod method, string urlSuffix)
+	{
+		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
+			?? throw new Exception("FileManagerApiBase setting is not configured.");
+
+		using var client = new HttpClient();
+		var request = new HttpRequestMessage(method, $"{fileManagerApiBase}api/{urlSuffix}");
+		using var response = await client.SendAsync(request);
+
+		var body = response.Content is not null ? await response.Content.ReadAsStringAsync() : string.Empty;
+
+		if (response.IsSuccessStatusCode)
+			return body;
+
+		var message = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body;
+		throw new Exception($"API error ({(int)response.StatusCode} {response.StatusCode}): {message}");
+	}
+	#endregion
 
 	#region Info
 	public static async Task<FileFolderModel> LoadFileFolderInfoFromAPI(string path, int userId)
 	{
-		var json = await RelayClient.InvokeAsync("LoadFileFolderInfo", new()
-		{
-			["path"] = path,
-			["userId"] = userId.ToString()
-		});
-		return JsonSerializer.Deserialize<FileFolderModel>(json, JsonOptions) ?? new FileFolderModel();
+		var encodedPath = Uri.EscapeDataString(path);
+		var urlSuffix = $"FileFolderManager/LoadFileFolderInfo?path={encodedPath}&userId={userId}";
+		var json = await CallAPI(HttpMethod.Get, urlSuffix);
+		return JsonSerializer.Deserialize<FileFolderModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new FileFolderModel();
 	}
 	#endregion
 
 	#region Lists
 	public static async Task<List<FileFolderModel>> LoadFileFoldersFromAPI(string path, int userId)
 	{
-		var json = await RelayClient.InvokeAsync("LoadFileFolders", new()
-		{
-			["path"] = path,
-			["userId"] = userId.ToString()
-		});
-		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, JsonOptions) ?? [];
+		var encodedPath = Uri.EscapeDataString(path);
+		var urlSuffix = $"FileFolderManager/LoadFileFolders?path={encodedPath}&userId={userId}";
+		var json = await CallAPI(HttpMethod.Get, urlSuffix);
+		return JsonSerializer.Deserialize<List<FileFolderModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
 	}
 	#endregion
 
-	#region Download
-	// Upload (Syncfusion multipart) and Download (browser stream / range) still go over direct HTTP.
-	// They need streaming refactors before they can move onto the relay.
+	#region Download Upload
 	public static async Task<string> GetDownloadUrl(string path, bool isFolder, int userId, string platform)
 	{
 		var encodedPath = Uri.EscapeDataString(path);
@@ -50,57 +62,53 @@ public static class FileExplorerData
 	#endregion
 
 	#region Actions
-	public static Task CreateFolderFromAPI(string parentPath, string name, int userId, string platform)
-		=> RelayClient.InvokeAsync("CreateFolder", new()
-		{
-			["parentPath"] = parentPath,
-			["name"] = name,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task CreateFolderFromAPI(string parentPath, string name, int userId, string platform)
+	{
+		var encodedParentPath = Uri.EscapeDataString(parentPath);
+		var encodedName = Uri.EscapeDataString(name);
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CreateFolder?parentPath={encodedParentPath}&name={encodedName}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
 
-	public static Task CreateFileFromAPI(string parentPath, string name, int userId, string platform)
-		=> RelayClient.InvokeAsync("CreateFile", new()
-		{
-			["parentPath"] = parentPath,
-			["name"] = name,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task CreateFileFromAPI(string parentPath, string name, int userId, string platform)
+	{
+		var encodedParentPath = Uri.EscapeDataString(parentPath);
+		var encodedName = Uri.EscapeDataString(name);
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CreateFile?parentPath={encodedParentPath}&name={encodedName}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
 
-	public static Task RenameFileFolderFromAPI(string path, string newName, int userId, string platform)
-		=> RelayClient.InvokeAsync("RenameFileFolder", new()
-		{
-			["path"] = path,
-			["newName"] = newName,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task RenameFileFolderFromAPI(string path, string newName, int userId, string platform)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var encodedNewName = Uri.EscapeDataString(newName);
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/RenameFileFolder?path={encodedPath}&newName={encodedNewName}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Put, urlSuffix);
+	}
 
-	public static Task DeleteFileFolderFromAPI(string path, int userId, string platform)
-		=> RelayClient.InvokeAsync("DeleteFileFolder", new()
-		{
-			["path"] = path,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task DeleteFileFolderFromAPI(string path, int userId, string platform)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/DeleteFileFolder?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Delete, urlSuffix);
+	}
 
-	public static Task MoveFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
-		=> RelayClient.InvokeAsync("MoveFileFolder", new()
-		{
-			["source"] = source,
-			["destinationFolder"] = destinationFolder,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task MoveFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
+	{
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/MoveFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Put, urlSuffix);
+	}
 
-	public static Task CopyFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
-		=> RelayClient.InvokeAsync("CopyFileFolder", new()
-		{
-			["source"] = source,
-			["destinationFolder"] = destinationFolder,
-			["userId"] = userId.ToString(),
-			["platform"] = platform
-		});
+	public static async Task CopyFileFolderFromAPI(string source, string destinationFolder, int userId, string platform)
+	{
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/CopyFileFolder?source={Uri.EscapeDataString(source)}&destinationFolder={Uri.EscapeDataString(destinationFolder)}&userId={userId}&platform={encodedPlatform}";
+		await CallAPI(HttpMethod.Post, urlSuffix);
+	}
 	#endregion
 }

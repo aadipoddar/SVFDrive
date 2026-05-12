@@ -1,9 +1,12 @@
-﻿#if EJ2_DNX
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+#if EJ2_DNX
 using System.Web;
 #endif
 
-namespace Syncfusion.EJ2.FileManager.Base;
-
+namespace Syncfusion.EJ2.FileManager.Base
+{
     public class ErrorDetails
     {
 
@@ -13,3 +16,4 @@ namespace Syncfusion.EJ2.FileManager.Base;
 
         public IEnumerable<string> FileExists { get; set; }
     }
+}
