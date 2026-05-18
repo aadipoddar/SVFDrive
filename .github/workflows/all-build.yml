@@ -37,9 +37,6 @@ jobs:
     - name: Build FileExplorerAPI
       run: dotnet build FileExplorerAPI/FileExplorerAPI.csproj --no-restore --configuration Release
 
-    - name: Build EJ2ASPCoreFileProvider
-      run: dotnet build EJ2ASPCoreFileProvider/EJ2ASPCoreFileProvider.csproj --no-restore --configuration Release
-    
     - name: Build SVFDrive MAUI (Android)
       run: dotnet build SVFDrive/SVFDrive/SVFDrive.csproj --configuration Release --framework net10.0-android
     
