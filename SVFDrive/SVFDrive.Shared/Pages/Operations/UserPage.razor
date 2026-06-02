@@ -96,6 +96,9 @@ else
 							<SfTextBox @bind-Value="_transactionUser.Remarks" Placeholder="Enter remarks (optional)" Multiline="true" FloatLabelType="FloatLabelType.Never" CssClass="custom-textbox" />
 						</div>
 					</div>
+					<div class="form-actions">
+						<button class="cd-btn cd-btn-primary" @onclick="SaveTransaction" disabled="@_isProcessing">Save</button>
+					</div>
 				</div>
 			</div>
 

@@ -215,6 +215,13 @@ h1:focus {
     align-items: start;
 }
 
+/* Save button row at the end of a form */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
 /* ================================================================
    7. SYNCFUSION INPUT COMPONENTS
    ================================================================ */
