@@ -9,4 +9,9 @@ public class BrowserLauncher(IJSRuntime jsRuntime) : IBrowserLauncher
 	{
 		await jsRuntime.InvokeVoidAsync("svfDownload", url);
 	}
+
+	public async Task OpenInNewTabAsync(string url)
+	{
+		await jsRuntime.InvokeVoidAsync("svfOpenTab", url);
+	}
 }

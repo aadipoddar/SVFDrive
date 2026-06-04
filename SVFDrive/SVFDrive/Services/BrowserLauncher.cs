@@ -8,4 +8,11 @@ public class BrowserLauncher : IBrowserLauncher
 	{
 		await Browser.Default.OpenAsync(new Uri(url), BrowserLaunchMode.External);
 	}
+
+	// On native hosts the system browser already opens the URL in its own tab/window,
+	// rendering inline content — same call as OpenAsync.
+	public async Task OpenInNewTabAsync(string url)
+	{
+		await Browser.Default.OpenAsync(new Uri(url), BrowserLaunchMode.External);
+	}
 }

@@ -1,6 +1,7 @@
 ﻿using FileExplorerAPI.Data;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using SVFDriveLibrary.Data.Operations;
 using SVFDriveLibrary.DataAccess;
 using SVFDriveLibrary.Models.Operations;
@@ -148,6 +149,44 @@ public class FileFolderManagerController : ControllerBase
 			return PhysicalFile(path, "application/octet-stream", fileName, enableRangeProcessing: true);
 		}
 		catch (Exception ex) { return StatusCode(500, $"Error downloading file: {ex.Message}"); }
+	}
+
+	[HttpGet]
+	[Route("PreviewFile")]
+	public async Task<IActionResult> PreviewFile([FromQuery] string path, [FromQuery] int userId, [FromQuery] string platform)
+	{
+		try
+		{
+			path = await FileFolderData.ValidateRootPath(path);
+
+			if (!System.IO.File.Exists(path))
+				return NotFound($"File not found: {path}");
+
+			if (!await FileFolderData.ValidateReadPermission(path, userId))
+				return StatusCode(403, "You do not have permission to view this file.");
+
+			var fileName = Path.GetFileName(path);
+
+			if (!new FileExtensionContentTypeProvider().TryGetContentType(path, out var contentType))
+				contentType = "application/octet-stream";
+
+			// Audit only on the initial request — range-continuation requests skip
+			if (string.IsNullOrEmpty(Request.Headers.Range.ToString()))
+				await AuditTrailData.SaveAuditTrail(new()
+				{
+					Action = AuditTrailActionTypes.Preview.ToString(),
+					TableName = OperationNames.FileFolder,
+					RecordNo = fileName,
+					RecordValue = path,
+					CreatedBy = userId,
+					CreatedFromPlatform = platform
+				});
+
+			// No download name → inline Content-Disposition, so the browser renders it in the tab
+			// rather than downloading. The browser decides what it can display (images, pdf, text…).
+			return PhysicalFile(path, contentType, enableRangeProcessing: true);
+		}
+		catch (Exception ex) { return StatusCode(500, $"Error previewing file: {ex.Message}"); }
 	}
 
 	[HttpGet]

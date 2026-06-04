@@ -10,7 +10,7 @@ BEGIN
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'CodeExpiryMinutes'				, N'10'		, N'Expiry time for codes in minutes')
 
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'MainDriveFolder'					, N'/mnt/mni'	, N'Primary root folder path used by the application')
-	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'FileManagerApiBase'				, N'http://103.170.167.11:5033/'	, N'Public base URL of the EJ2 File Manager API (used when the local URL is unreachable)')
+	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'FileManagerApiBase'				, N'https://fileapi.mni.agency/'	, N'Public base URL of the EJ2 File Manager API (used when the local URL is unreachable)')
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'FileManagerApiBaseLocal'			, N'http://10.10.10.68:5033/'		, N'Local/LAN base URL of the EJ2 File Manager API (preferred when reachable). Leave blank to always use the public URL')
 
 	INSERT INTO [dbo].[Settings] ([Key], [Value], [Description]) VALUES (N'AutoRefreshReportTimer'			, N'5', N'Auto refresh interval for reports in minutes')

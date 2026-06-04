@@ -23,10 +23,10 @@ public static class FileExplorerData
 			if (!string.IsNullOrEmpty(_cachedApiBase))
 				return _cachedApiBase;
 
-			var publicUrl = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
-				?? throw new Exception("FileManagerApiBase setting is not configured.");
 			var localUrl = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBaseLocal)).Value
 				?? throw new Exception("FileManagerApiBaseLocal setting is not configured.");
+			var publicUrl = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
+				?? throw new Exception("FileManagerApiBase setting is not configured.");
 
 			if (!string.IsNullOrWhiteSpace(localUrl) && await IsReachable(localUrl))
 				_cachedApiBase = localUrl;
@@ -115,6 +115,16 @@ public static class FileExplorerData
 		var encodedPlatform = Uri.EscapeDataString(platform);
 		var endpoint = isFolder ? "DownloadFolder" : "DownloadFile";
 		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
+		var fileManagerApiBase = await GetWorkingApiBase();
+
+		return $"{fileManagerApiBase}api/{urlSuffix}";
+	}
+
+	public static async Task<string> GetPreviewUrl(string path, int userId, string platform)
+	{
+		var encodedPath = Uri.EscapeDataString(path);
+		var encodedPlatform = Uri.EscapeDataString(platform);
+		var urlSuffix = $"FileFolderManager/PreviewFile?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
 		var fileManagerApiBase = await GetWorkingApiBase();
 
 		return $"{fileManagerApiBase}api/{urlSuffix}";

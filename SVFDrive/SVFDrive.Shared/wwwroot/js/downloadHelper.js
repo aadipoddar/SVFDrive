@@ -23,3 +23,7 @@ window.svfDownload = function (url) {
         }
     }, 60000);
 };
+
+window.svfOpenTab = function (url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+};
