@@ -1,8 +1,10 @@
 using SVFDrive.Shared.Components.Dialog;
+
 using SVFDriveLibrary.Data.Common;
 using SVFDriveLibrary.Data.Operations;
 using SVFDriveLibrary.Exports.Mailing;
 using SVFDriveLibrary.Models.Operations;
+
 using Syncfusion.Blazor.Inputs;
 
 namespace SVFDrive.Shared.Pages.Authentication;
@@ -199,7 +201,7 @@ public partial class LoginWithCodePage
 
 			if (!string.IsNullOrWhiteSpace(_newPassword))
 			{
-				if (_isEnabledUsersResetPassword)
+				if (!_isEnabledUsersResetPassword)
 					throw new Exception("Users are not allowed to set a new password. Please contact support.");
 
 				if (_newPassword.Length < 6)
