@@ -1,17 +1,78 @@
 using SVFDriveLibrary.Data.Operations;
 using SVFDriveLibrary.Models.FileExplorer;
 using SVFDriveLibrary.Models.Operations;
+
 using System.Text.Json;
 
 namespace SVFDriveLibrary.Data.FileExplorer;
 
 public static class FileExplorerData
 {
+	#region Base URL resolution
+	private static string _cachedApiBase;
+	private static readonly SemaphoreSlim _probeLock = new(1, 1);
+
+	public static async Task<string> GetWorkingApiBase()
+	{
+		if (!string.IsNullOrEmpty(_cachedApiBase))
+			return _cachedApiBase;
+
+		await _probeLock.WaitAsync();
+		try
+		{
+			if (!string.IsNullOrEmpty(_cachedApiBase))
+				return _cachedApiBase;
+
+			var publicUrl = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
+				?? throw new Exception("FileManagerApiBase setting is not configured.");
+			var localUrl = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBaseLocal)).Value
+				?? throw new Exception("FileManagerApiBaseLocal setting is not configured.");
+
+			if (!string.IsNullOrWhiteSpace(localUrl) && await IsReachable(localUrl))
+				_cachedApiBase = localUrl;
+			else
+				_cachedApiBase = publicUrl;
+
+			return _cachedApiBase;
+		}
+		finally
+		{
+			_probeLock.Release();
+		}
+	}
+
+	private static async Task<bool> IsReachable(string baseUrl)
+	{
+		try
+		{
+			using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+			using var response = await client.GetAsync(baseUrl);
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+	#endregion
+
 	#region API Calls
 	private static async Task<string> CallAPI(HttpMethod method, string urlSuffix)
 	{
-		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
-			?? throw new Exception("FileManagerApiBase setting is not configured.");
+		try
+		{
+			return await SendOnce(method, urlSuffix);
+		}
+		catch (HttpRequestException)
+		{
+			_cachedApiBase = null;
+			return await SendOnce(method, urlSuffix);
+		}
+	}
+
+	private static async Task<string> SendOnce(HttpMethod method, string urlSuffix)
+	{
+		var fileManagerApiBase = await GetWorkingApiBase();
 
 		using var client = new HttpClient();
 		var request = new HttpRequestMessage(method, $"{fileManagerApiBase}api/{urlSuffix}");
@@ -54,8 +115,7 @@ public static class FileExplorerData
 		var encodedPlatform = Uri.EscapeDataString(platform);
 		var endpoint = isFolder ? "DownloadFolder" : "DownloadFile";
 		var urlSuffix = $"FileFolderManager/{endpoint}?path={encodedPath}&userId={userId}&platform={encodedPlatform}";
-		var fileManagerApiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
-			?? throw new Exception("FileManagerApiBase setting is not configured.");
+		var fileManagerApiBase = await GetWorkingApiBase();
 
 		return $"{fileManagerApiBase}api/{urlSuffix}";
 	}

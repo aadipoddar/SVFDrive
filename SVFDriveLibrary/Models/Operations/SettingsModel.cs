@@ -14,9 +14,10 @@ public static class SettingsKeys
 	public static string EnableUsersToResetPassword => "EnableUsersToResetPassword";
 	public static string CodeResendLimit => "CodeResendLimit";
 	public static string CodeExpiryMinutes => "CodeExpiryMinutes";
-	
+
 	public static string MainDriveFolder => "MainDriveFolder";
 	public static string FileManagerApiBase => "FileManagerApiBase";
+	public static string FileManagerApiBaseLocal => "FileManagerApiBaseLocal";
 
 	public static string AutoRefreshReportTimer => "AutoRefreshReportTimer";
 }

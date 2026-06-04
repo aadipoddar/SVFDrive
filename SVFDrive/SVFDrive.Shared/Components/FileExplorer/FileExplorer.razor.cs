@@ -267,8 +267,7 @@ public partial class FileExplorer
 
 		try
 		{
-			var apiBase = (await SettingsData.LoadSettingsByKey(SettingsKeys.FileManagerApiBase)).Value
-				?? throw new Exception("FileManagerApiBase not configured.");
+			var apiBase = await FileExplorerData.GetWorkingApiBase();
 
 			var encodedParent = Uri.EscapeDataString(_currentPath.FullName);
 			var encodedPlatform = Uri.EscapeDataString(FormFactor.GetFormFactor() + FormFactor.GetPlatform());
